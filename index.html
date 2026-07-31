@@ -259,6 +259,71 @@
   }
   .swap-btn:hover{color:var(--amber); border-color:var(--amber); transform:rotate(180deg);}
 
+<<<<<<< HEAD
+  /* ---- passenger / luggage counters ---- */
+  .counter-row{
+    display:flex; gap:12px; margin-bottom:20px;
+  }
+  .counter-field{
+    flex:1;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:12px 14px;
+  }
+  .counter-field label{
+    display:block;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--muted);
+    margin-bottom:8px;
+  }
+  .counter-controls{
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .counter-btn{
+    width:28px; height:28px;
+    border-radius:8px;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    color:var(--text);
+    font-size:16px;
+    line-height:1;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:border-color .2s ease, color .2s ease;
+  }
+  .counter-btn:hover{border-color:var(--teal); color:var(--teal);}
+  .counter-btn:active{transform:scale(0.94);}
+  .counter-val{font-weight:700; font-size:16px; min-width:20px; text-align:center;}
+
+  /* ---- AI ride assistant ---- */
+  .ai-suggest-card{
+    background:linear-gradient(135deg, rgba(47,143,224,0.14), rgba(255,138,61,0.08));
+    border:1px solid rgba(47,143,224,0.35);
+    border-radius:16px;
+    padding:14px 16px;
+    margin-bottom:16px;
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+  }
+  .ai-suggest-icon{font-size:20px; flex-shrink:0; line-height:1.3;}
+  .ai-suggest-title{font-weight:700; font-size:13px; color:var(--teal); margin-bottom:3px;}
+  .ai-suggest-text{font-size:12.5px; color:var(--muted); line-height:1.45;}
+  .ai-badge{
+    display:inline-flex; align-items:center; gap:4px;
+    font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;
+    color:#1a1206;
+    background:linear-gradient(135deg,#FFD98A,var(--amber) 70%);
+    padding:3px 8px;
+    border-radius:999px;
+    margin-top:5px;
+  }
+
+=======
+>>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
   .quick-tags{
     display:flex; gap:8px; flex-wrap:wrap; margin-bottom:22px;
   }
@@ -639,6 +704,158 @@
   }
   .plate b{color:var(--text); letter-spacing:0.05em;}
 
+<<<<<<< HEAD
+  /* ---- AI safety monitoring panel ---- */
+  .safety-panel{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:16px 18px;
+    margin-bottom:16px;
+  }
+  .safety-header{
+    display:flex; align-items:center; gap:9px;
+    font-weight:600; font-size:14px;
+  }
+  .safety-dot{
+    width:9px; height:9px; border-radius:50%; flex-shrink:0;
+    background:var(--muted);
+  }
+  .safety-dot.ok{background:var(--teal); box-shadow:0 0 0 4px rgba(63,214,196,0.18); animation:safetyPulse 2s ease-in-out infinite;}
+  .safety-dot.alert{background:var(--danger); box-shadow:0 0 0 4px rgba(232,96,122,0.2); animation:safetyPulse 1s ease-in-out infinite;}
+  @keyframes safetyPulse{
+    0%,100%{opacity:1;}
+    50%{opacity:0.45;}
+  }
+  .safety-sub{color:var(--muted); font-size:12.5px; margin-top:6px; line-height:1.45;}
+  #alertContactBtn{
+    margin-top:12px;
+    width:100%;
+    border-color:var(--danger);
+    color:var(--danger);
+  }
+  #alertContactBtn:hover{background:rgba(232,96,122,0.08);}
+
+  /* ---- AI support chat widget ---- */
+  .ai-chat-fab{
+    position:fixed;
+    right:20px;
+    bottom:26px;
+    width:54px; height:54px;
+    border-radius:50%;
+    border:none;
+    background:linear-gradient(135deg, #FFD98A, var(--amber) 70%);
+    color:#1a1206;
+    font-size:22px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    box-shadow:0 10px 26px rgba(242,169,59,0.4);
+    z-index:500;
+    transition:transform .2s ease;
+  }
+  .ai-chat-fab:hover{transform:scale(1.06);}
+
+  .ai-chat-panel{
+    position:fixed;
+    right:20px;
+    bottom:92px;
+    width:320px;
+    max-width:88vw;
+    height:440px;
+    max-height:70vh;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:18px;
+    box-shadow:0 20px 50px rgba(0,0,0,0.45);
+    display:none;
+    flex-direction:column;
+    overflow:hidden;
+    z-index:600;
+  }
+  .ai-chat-panel.open{display:flex;}
+  .ai-chat-header{
+    display:flex; align-items:flex-start; justify-content:space-between;
+    padding:14px 16px;
+    background:var(--surface-2);
+    border-bottom:1px solid var(--line);
+    flex-shrink:0;
+  }
+  .ai-chat-title{font-weight:700; font-size:14px;}
+  .ai-chat-sub{font-size:11px; color:var(--muted); margin-top:2px;}
+  .ai-chat-close{background:none; border:none; color:var(--muted); font-size:16px; cursor:pointer; line-height:1;}
+  .ai-chat-close:hover{color:var(--text);}
+  .ai-chat-messages{
+    flex:1; overflow-y:auto; padding:14px 16px;
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .chat-msg{
+    max-width:85%;
+    padding:9px 12px;
+    border-radius:14px;
+    font-size:12.5px;
+    line-height:1.45;
+    white-space:pre-wrap;
+  }
+  .chat-msg.user{
+    align-self:flex-end;
+    background:linear-gradient(135deg, #FFD98A, var(--amber) 70%);
+    color:#1a1206;
+    border-bottom-right-radius:4px;
+  }
+  .chat-msg.bot{
+    align-self:flex-start;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    color:var(--text);
+    border-bottom-left-radius:4px;
+  }
+  .chat-msg.emergency{
+    align-self:flex-start;
+    background:rgba(232,96,122,0.14);
+    border:1px solid var(--danger);
+    color:var(--text);
+  }
+  .chat-msg.typing{color:var(--muted); font-style:italic;}
+  .ai-chat-input-row{
+    display:flex; gap:8px;
+    padding:12px 14px;
+    border-top:1px solid var(--line);
+    flex-shrink:0;
+  }
+  .ai-chat-input-row input{
+    flex:1;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:9px 12px;
+    color:var(--text);
+    font-size:12.5px;
+    outline:none;
+    font-family:system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  }
+  .ai-chat-input-row input:focus{border-color:var(--amber);}
+  .ai-chat-input-row button{
+    width:36px; height:36px;
+    border-radius:10px;
+    border:none;
+    background:linear-gradient(135deg, #FFD98A, var(--amber) 70%);
+    color:#1a1206;
+    cursor:pointer;
+    font-size:15px;
+    flex-shrink:0;
+  }
+  .ai-chat-emergency-hint{
+    font-size:10.5px;
+    color:var(--muted);
+    text-align:center;
+    padding:8px 10px 10px;
+    border-top:1px dashed var(--line);
+    flex-shrink:0;
+  }
+  .ai-chat-emergency-hint b{color:var(--danger);}
+
+=======
+>>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
   ::selection{background:rgba(242,169,59,0.3);}
 
   /* ---- auth: login / signup ---- */
@@ -876,7 +1093,11 @@
     <section class="screen" id="screen-1">
       <p class="auth-hint" id="userGreeting" style="margin-bottom:14px;"></p>
       <h1 class="page-title">Where's the ride<br>taking you?</h1>
+<<<<<<< HEAD
+      <p class="page-sub">Enter pickup, drop, passengers &amp; luggage — our AI assistant will pick the most affordable ride that fits.</p>
+=======
       <p class="page-sub">Enter pickup &amp; drop to see prices for every car type.</p>
+>>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
 
       <div class="route-card">
         <div class="route-row">
@@ -906,6 +1127,28 @@
       <div id="routeMap"></div>
       <p class="map-status" id="mapStatus"></p>
 
+<<<<<<< HEAD
+      <div class="counter-row">
+        <div class="counter-field">
+          <label>Passengers</label>
+          <div class="counter-controls">
+            <button type="button" class="counter-btn" data-counter="members" data-dir="-1">−</button>
+            <span class="counter-val" id="membersVal">1</span>
+            <button type="button" class="counter-btn" data-counter="members" data-dir="1">+</button>
+          </div>
+        </div>
+        <div class="counter-field">
+          <label>Luggage bags</label>
+          <div class="counter-controls">
+            <button type="button" class="counter-btn" data-counter="luggage" data-dir="-1">−</button>
+            <span class="counter-val" id="luggageVal">0</span>
+            <button type="button" class="counter-btn" data-counter="luggage" data-dir="1">+</button>
+          </div>
+        </div>
+      </div>
+
+=======
+>>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
       <div class="quick-tags">
         <button type="button" data-fill-pickup="Home">📍 Home</button>
         <button type="button" data-fill-pickup="VIT Chennai Campus">🎓 Campus</button>
@@ -940,6 +1183,25 @@
         <div class="dot-drop" style="width:8px;height:8px;"></div>
       </div>
 
+<<<<<<< HEAD
+      <div class="ai-suggest-card" id="demandCard" style="display:none;">
+        <div class="ai-suggest-icon">📈</div>
+        <div>
+          <div class="ai-suggest-title">Demand &amp; Pricing Agent</div>
+          <div class="ai-suggest-text" id="demandText"></div>
+        </div>
+      </div>
+
+      <div class="ai-suggest-card" id="aiSuggestCard" style="display:none;">
+        <div class="ai-suggest-icon">🤖</div>
+        <div>
+          <div class="ai-suggest-title">AI Ride Assistant</div>
+          <div class="ai-suggest-text" id="aiSuggestText"></div>
+        </div>
+      </div>
+
+=======
+>>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
       <div class="car-list" id="carList"><!-- populated by JS --></div>
 
       <p class="section-label">Payment method</p>
@@ -990,6 +1252,26 @@
         </div>
       </div>
 
+<<<<<<< HEAD
+      <div class="ai-suggest-card" id="driverAiCard" style="display:none;">
+        <div class="ai-suggest-icon">🚦</div>
+        <div>
+          <div class="ai-suggest-title">AI Dispatch Agent</div>
+          <div class="ai-suggest-text" id="driverAiText">Analyzing nearby drivers…</div>
+        </div>
+      </div>
+
+      <div class="safety-panel" id="safetyPanel">
+        <div class="safety-header">
+          <span class="safety-dot" id="safetyDot"></span>
+          <span id="safetyStatusText">Live trip monitoring active</span>
+        </div>
+        <p class="safety-sub" id="safetySub">AI is comparing your driver's live location to the planned route.</p>
+        <button type="button" class="btn-ghost" id="alertContactBtn" style="display:none;">🚨 Alert emergency contact</button>
+      </div>
+
+=======
+>>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
       <div class="fare-card">
         <div class="fare-row"><span id="fareCarName">Car type</span><span id="fareDist">— km</span></div>
         <div class="fare-row"><span>Base fare</span><span id="fareBase">₹0</span></div>
@@ -1029,6 +1311,28 @@
   </div>
 </div>
 
+<<<<<<< HEAD
+<!-- AI support chat widget -->
+<button type="button" class="ai-chat-fab" id="aiChatFab" title="Ask AI support" aria-label="Ask AI support">🤖</button>
+
+<div class="ai-chat-panel" id="aiChatPanel">
+  <div class="ai-chat-header">
+    <div>
+      <div class="ai-chat-title">go_travels AI Support</div>
+      <div class="ai-chat-sub">Ask about bookings, fares, safety</div>
+    </div>
+    <button type="button" class="ai-chat-close" id="aiChatClose" aria-label="Close chat">✕</button>
+  </div>
+  <div class="ai-chat-messages" id="aiChatMessages"></div>
+  <div class="ai-chat-input-row">
+    <input type="text" id="aiChatInput" placeholder="Type your question…" autocomplete="off">
+    <button type="button" id="aiChatSend" aria-label="Send">➤</button>
+  </div>
+  <div class="ai-chat-emergency-hint">🚨 Emergency? Call <b>112</b> (National) or <b>100</b> (Police) anytime.</div>
+</div>
+
+=======
+>>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 (function(){
@@ -1040,6 +1344,11 @@
     drop: "",
     distanceKm: 0,
     etaMins: 0,
+<<<<<<< HEAD
+    members: 1,
+    luggage: 0,
+=======
+>>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
     selectedCar: null,
     paymentMethod: null
   };
@@ -1059,6 +1368,11 @@
       base: 40,
       perKm: 8,
       speedKmh: 22,
+<<<<<<< HEAD
+      seats: 4,
+      luggage: 2,
+=======
+>>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
       icon: '<path d="M4 15l1.4-4.8A2 2 0 0 1 7.3 9h9.4a2 2 0 0 1 1.9 1.2L20 15" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7.5" cy="16" r="1.5" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="16.5" cy="16" r="1.5" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M4 15h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>'
     },
     {
@@ -1068,6 +1382,11 @@
       base: 60,
       perKm: 11,
       speedKmh: 25,
+<<<<<<< HEAD
+      seats: 4,
+      luggage: 3,
+=======
+>>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
       icon: '<path d="M3 15l1.2-4.5A2.4 2.4 0 0 1 6.5 9h11a2.4 2.4 0 0 1 2.3 1.5L21 15" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 9l1.6-3.2A2 2 0 0 1 9.4 5h5.2a2 2 0 0 1 1.8 1.1L18 9" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7" cy="16" r="1.5" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="17" cy="16" r="1.5" stroke="currentColor" stroke-width="1.8" fill="none"/>'
     },
     {
@@ -1077,6 +1396,11 @@
       base: 80,
       perKm: 14,
       speedKmh: 24,
+<<<<<<< HEAD
+      seats: 6,
+      luggage: 5,
+=======
+>>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
       icon: '<path d="M2.5 15.5l1.3-5.5A2.3 2.3 0 0 1 6 8.2h12a2.3 2.3 0 0 1 2.2 1.7l1.3 5.6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 8.2l1.3-2.6A2 2 0 0 1 8.6 4.5h6.8a2 2 0 0 1 1.8 1.1l1.3 2.6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.8" cy="16.2" r="1.6" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="17.2" cy="16.2" r="1.6" stroke="currentColor" stroke-width="1.8" fill="none"/>'
     },
     {
@@ -1086,11 +1410,97 @@
       base: 120,
       perKm: 18,
       speedKmh: 24,
+<<<<<<< HEAD
+      seats: 6,
+      luggage: 5,
+=======
+>>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
       icon: '<path d="M2.5 15.5l1.3-5.5A2.3 2.3 0 0 1 6 8.2h12a2.3 2.3 0 0 1 2.2 1.7l1.3 5.6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 8.2l1.3-2.6A2 2 0 0 1 8.6 4.5h6.8a2 2 0 0 1 1.8 1.1l1.3 2.6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.8" cy="16.2" r="1.6" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="17.2" cy="16.2" r="1.6" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M12 2.4l.6 1.3 1.4.2-1 1 .25 1.4L12 4.6l-1.25.7.25-1.4-1-1 1.4-.2z" fill="currentColor"/>'
     }
   ];
 
+<<<<<<< HEAD
+  // ---------- Agentic layer: driver reliability + demand prediction ----------
+  // Small mock driver pool. baseCancelRate is a stand-in for "this driver's
+  // historical cancellation rate" — in a real system this would come from a
+  // database of past trips.
+  var DRIVER_POOL = [
+    { name:"Suresh Kumar", rating:4.8, baseCancelRate:0.04, vehicles:["mini","sedan"] },
+    { name:"Arjun Nair",   rating:4.6, baseCancelRate:0.07, vehicles:["sedan","suv"] },
+    { name:"Vignesh R",    rating:4.9, baseCancelRate:0.02, vehicles:["mini","sedan","suv"] },
+    { name:"Karthik S",    rating:4.3, baseCancelRate:0.12, vehicles:["suv","primesuv"] },
+    { name:"Manoj T",      rating:4.7, baseCancelRate:0.05, vehicles:["primesuv","suv"] },
+    { name:"Praveen M",    rating:4.4, baseCancelRate:0.09, vehicles:["mini","sedan"] },
+    { name:"Sathish V",    rating:4.85,baseCancelRate:0.03, vehicles:["sedan","suv"] },
+    { name:"Dinesh K",     rating:4.2, baseCancelRate:0.15, vehicles:["mini"] }
+  ];
+
+  // Predicts a 2-95% cancellation risk score for a driver+trip combination.
+  // Factors mirror the real-world causes from the "why drivers cancel" table:
+  // very short/very long trips, cash payments, and high-demand windows all
+  // correlate with higher cancellation rates.
+  function predictCancellationRisk(driver, context){
+    var risk = driver.baseCancelRate * 100;
+    if(context.distanceKm < 2) risk += 6;
+    if(context.distanceKm > 20) risk += 8;
+    if(context.paymentMethod === "cash") risk += 5;
+    if(context.demandLevel === "High") risk += 7;
+    return Math.max(2, Math.min(95, Math.round(risk)));
+  }
+
+  // Scores every driver who services the chosen vehicle type and assigns the
+  // one with the lowest predicted cancellation risk (ties broken by rating).
+  function assignReliableDriver(vehicleId, context){
+    var pool = DRIVER_POOL.filter(function(d){ return d.vehicles.indexOf(vehicleId) !== -1; });
+    if(!pool.length) pool = DRIVER_POOL.slice();
+    var scored = pool.map(function(d){
+      var risk = predictCancellationRisk(d, context);
+      return { driver:d, risk:risk, reliability: 100 - risk };
+    });
+    scored.sort(function(a, b){
+      if(b.reliability !== a.reliability) return b.reliability - a.reliability;
+      return b.driver.rating - a.driver.rating;
+    });
+    return scored[0];
+  }
+
+  // Classifies current demand as Low/Medium/High from time-of-day (rush
+  // hours), with a touch of area-based variety so the demo doesn't always
+  // look identical for every pickup point.
+  function predictDemand(pickupText){
+    var hour = new Date().getHours();
+    var level = "Low";
+    if((hour >= 7 && hour <= 10) || (hour >= 17 && hour <= 21)) level = "High";
+    else if((hour >= 11 && hour <= 16) || hour >= 22 || hour <= 1) level = "Medium";
+
+    var h = hashString((pickupText || "").trim().toLowerCase());
+    if(level === "Low" && h % 5 === 0) level = "Medium";
+
+    var surgeMap = { Low: 1.0, Medium: 1.15, High: 1.4 };
+    var waitSavedMap = { Low: 0, Medium: 1, High: 3 };
+    return { level: level, surge: surgeMap[level], waitSavedMins: waitSavedMap[level] };
+  }
+
+  // Sends the already-computed heuristic scores to the backend agent
+  // endpoint, which asks a free Groq LLM to turn them into a short
+  // explanation. If it fails (offline, no key set) the heuristic fallback
+  // text already shown in targetEl is simply left in place.
+  async function fetchAgentExplanation(task, context, targetEl){
+    try{
+      var res = await fetch("/api/agent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ task: task, context: context })
+      });
+      var data = await res.json();
+      if(data && data.explanation) targetEl.textContent = data.explanation;
+    }catch(err){
+      // keep the heuristic fallback text already on screen
+    }
+  }
+=======
   var DRIVER_NAMES = ["Suresh Kumar","Arjun Nair","Vignesh R","Karthik S","Manoj T","Praveen M","Sathish V","Dinesh K"];
+>>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
 
   // deterministic pseudo distance from pickup+drop text so the same pair always gives the same number
   function hashString(str){
@@ -1102,12 +1512,35 @@
   }
 
   function computeDistance(pickup, drop){
+<<<<<<< HEAD
+    // last-resort fallback only — used when we don't even have coordinates
+    // for one of the two points (geocoding itself failed)
+=======
     // fallback only — used if the live map/routing lookup below fails
+>>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
     var h = hashString(pickup.trim().toLowerCase() + "|" + drop.trim().toLowerCase());
     var km = 2.5 + (h % 2550) / 100;
     return Math.round(km * 10) / 10;
   }
 
+<<<<<<< HEAD
+  // Straight-line ("as the crow flies") distance between two lat/lng points,
+  // in km. Used as a much more accurate fallback than a random guess when we
+  // have real coordinates but the road-routing service is unavailable.
+  function haversineKm(a, b){
+    var R = 6371;
+    var dLat = (b.lat - a.lat) * Math.PI / 180;
+    var dLng = (b.lng - a.lng) * Math.PI / 180;
+    var lat1 = a.lat * Math.PI / 180;
+    var lat2 = b.lat * Math.PI / 180;
+    var h = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    var c = 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+    return R * c;
+  }
+
+=======
+>>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
   // ---------- Live map + real distance (Leaflet + OSM Nominatim + OSRM) ----------
   var routeMapEl = document.getElementById("routeMap");
   var mapStatusEl = document.getElementById("mapStatus");
@@ -1164,6 +1597,31 @@
     };
   }
 
+<<<<<<< HEAD
+  function drawMapMarkers(pickupPoint, dropPoint, pathCoords){
+    ensureMapInit();
+    routeMapEl.classList.add("visible");
+    leafletMap.invalidateSize();
+
+    if(routeLine) leafletMap.removeLayer(routeLine);
+    if(pickupMarker) leafletMap.removeLayer(pickupMarker);
+    if(dropMarker) leafletMap.removeLayer(dropMarker);
+
+    var coords = pathCoords || [[pickupPoint.lat, pickupPoint.lng], [dropPoint.lat, dropPoint.lng]];
+    routeLine = L.polyline(coords, {
+      color: "#F2A93B",
+      weight: pathCoords ? 4 : 3,
+      dashArray: pathCoords ? null : "6 8" // dashed = approximate straight-line, solid = real road route
+    }).addTo(leafletMap);
+    pickupMarker = L.circleMarker([pickupPoint.lat, pickupPoint.lng], { radius:6, color:"#3FD6C4", fillColor:"#3FD6C4", fillOpacity:1 })
+      .addTo(leafletMap).bindPopup("Pickup: " + pickupPoint.matchedName);
+    dropMarker = L.circleMarker([dropPoint.lat, dropPoint.lng], { radius:6, color:"#F2A93B", fillColor:"#F2A93B", fillOpacity:1 })
+      .addTo(leafletMap).bindPopup("Drop: " + dropPoint.matchedName);
+    leafletMap.fitBounds(routeLine.getBounds(), { padding:[18,18] });
+  }
+
+=======
+>>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
   // Looks up real coordinates + a real driving distance for the pickup/drop text.
   // Falls back to the pseudo-random distance if the location can't be found or the
   // network call fails (e.g. offline), so the app never gets stuck.
@@ -1183,6 +1641,24 @@
       mapStatusEl.textContent = "Calculating route…";
       var route = await fetchRoute(pickupPoint, dropPoint);
       if(!route){
+<<<<<<< HEAD
+        // Road-routing service is unavailable (it's a shared free demo
+        // server and does go down/rate-limit) — but we DO have real
+        // coordinates from geocoding, so use straight-line distance scaled
+        // up by a typical road-vs-straight-line factor instead of a random
+        // guess. This is what previously caused wildly wrong distances.
+        var straightKm = haversineKm(pickupPoint, dropPoint);
+        var approxKm = Math.round(straightKm * 1.3 * 10) / 10;
+        drawMapMarkers(pickupPoint, dropPoint, null);
+        var shortP = pickupPoint.matchedName.split(",").slice(0,2).join(",");
+        var shortD = dropPoint.matchedName.split(",").slice(0,2).join(",");
+        mapStatusEl.textContent =
+          "~" + approxKm + " km (approx., live routing unavailable)  •  matched: " + shortP + " → " + shortD;
+        return approxKm;
+      }
+
+      drawMapMarkers(pickupPoint, dropPoint, route.coords);
+=======
         mapStatusEl.textContent = "Couldn't calculate a route — showing an estimate instead.";
         return computeDistance(pickup, drop);
       }
@@ -1201,6 +1677,7 @@
       dropMarker = L.circleMarker([dropPoint.lat, dropPoint.lng], { radius:6, color:"#F2A93B", fillColor:"#F2A93B", fillOpacity:1 })
         .addTo(leafletMap).bindPopup("Drop: " + dropPoint.matchedName);
       leafletMap.fitBounds(routeLine.getBounds(), { padding:[18,18] });
+>>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
 
       // Show a short version of what was actually matched, so a wrong pick
       // (e.g. a same-named place in another area) is obvious immediately.
@@ -1219,6 +1696,33 @@
     return "₹" + Math.round(n).toLocaleString("en-IN");
   }
 
+<<<<<<< HEAD
+  // ---------- AI ride assistant ----------
+  // A small rules-based agent: given how many people and bags are travelling,
+  // it filters to cars that can actually fit everyone, then recommends the
+  // cheapest one among those that fit. If nobody fits, it recommends the
+  // single most spacious option instead and flags that clearly.
+  // Requires each car's ._price to already be set (buildCarList sets this
+  // before calling in).
+  function getAIRecommendation(members, luggage){
+    var fitting = CAR_TYPES.filter(function(c){
+      return c.seats >= members && c.luggage >= luggage;
+    });
+
+    if(fitting.length){
+      var cheapest = fitting.slice().sort(function(a, b){ return a._price - b._price; })[0];
+      return { car: cheapest, fits: true };
+    }
+
+    // Nothing fits everyone comfortably — suggest the roomiest car instead.
+    var roomiest = CAR_TYPES.slice().sort(function(a, b){
+      return (b.seats + b.luggage) - (a.seats + a.luggage);
+    })[0];
+    return { car: roomiest, fits: false };
+  }
+
+=======
+>>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
   // ---------- screen transitions ----------
   var screens = document.querySelectorAll(".screen");
   var dots = document.querySelectorAll(".step-dots .dot");
@@ -1375,8 +1879,30 @@
     }else{
       greeting.textContent = "Welcome back! Logged in as +91 " + authState.phone.slice(0,2) + "XXXXX" + authState.phone.slice(7);
     }
+<<<<<<< HEAD
+    recordLogin(authState.phone, authState.name);
     goToScreen(3);
   });
+
+  // Fires-and-forgets a login record to the backend so it can persist the
+  // user + increment login counters in SQLite. Never blocks the UI or
+  // throws if the server/db is briefly unavailable — login already
+  // succeeded on the client, this is just analytics on top of it.
+  async function recordLogin(phone, name){
+    try{
+      await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: phone, name: name || "" })
+      });
+    }catch(err){
+      // non-critical — ignore
+    }
+  }
+=======
+    goToScreen(3);
+  });
+>>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
   var pickupInput = document.getElementById("pickup");
   var dropInput = document.getElementById("drop");
   var toStep2Btn = document.getElementById("toStep2");
@@ -1458,6 +1984,22 @@
   pickupInput.addEventListener("input", validateStep1);
   dropInput.addEventListener("input", validateStep1);
 
+<<<<<<< HEAD
+  var membersValEl = document.getElementById("membersVal");
+  var luggageValEl = document.getElementById("luggageVal");
+  document.querySelectorAll("[data-counter]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var key = btn.getAttribute("data-counter");
+      var dir = parseInt(btn.getAttribute("data-dir"), 10);
+      var min = key === "members" ? 1 : 0;
+      var max = key === "members" ? 6 : 8;
+      state[key] = Math.min(max, Math.max(min, state[key] + dir));
+      (key === "members" ? membersValEl : luggageValEl).textContent = state[key];
+    });
+  });
+
+=======
+>>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
   swapBtn.addEventListener("click", function(){
     var tmp = pickupInput.value;
     pickupInput.value = dropInput.value;
@@ -1537,12 +2079,30 @@
 
   function buildCarList(){
     carListEl.innerHTML = "";
+<<<<<<< HEAD
+
+    var demand = predictDemand(state.pickup);
+    state.demand = demand; // remembered so the confirm step can reuse the same level
+
+    CAR_TYPES.forEach(function(car){
+      var price = (car.base + car.perKm * state.distanceKm) * demand.surge;
+      var etaMins = Math.round((state.distanceKm / car.speedKmh) * 60) + 3 - demand.waitSavedMins;
+      car._price = Math.round(price);
+      car._eta = Math.max(2, etaMins);
+    });
+
+    var rec = getAIRecommendation(state.members, state.luggage);
+
+    CAR_TYPES.forEach(function(car){
+      var isRec = car.id === rec.car.id;
+=======
     CAR_TYPES.forEach(function(car){
       var price = car.base + car.perKm * state.distanceKm;
       var etaMins = Math.round((state.distanceKm / car.speedKmh) * 60) + 3; // +3 min pickup buffer
       car._price = Math.round(price);
       car._eta = etaMins;
 
+>>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
       var row = document.createElement("div");
       row.className = "car-option";
       row.setAttribute("data-car", car.id);
@@ -1551,6 +2111,10 @@
         '<div class="car-info">' +
           '<div class="name">' + car.name + '</div>' +
           '<div class="sub">' + car.sub + '</div>' +
+<<<<<<< HEAD
+          (isRec ? '<div><span class="ai-badge">🤖 AI Pick</span></div>' : '') +
+=======
+>>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
         '</div>' +
         '<div class="car-price">' +
           '<div class="amt">' + fmtRupee(car._price) + '</div>' +
@@ -1567,14 +2131,121 @@
 
       carListEl.appendChild(row);
     });
+<<<<<<< HEAD
+
+    // Show the AI assistant's reasoning and default the selection to its pick —
+    // the rider can still tap any other car to override it.
+    var aiCard = document.getElementById("aiSuggestCard");
+    var aiText = document.getElementById("aiSuggestText");
+    var pax = state.members + (state.members === 1 ? " passenger" : " passengers");
+    var bags = state.luggage + (state.luggage === 1 ? " bag" : " bags");
+    if(rec.fits){
+      aiText.textContent =
+        "For " + pax + " and " + bags + ", the " + rec.car.name +
+        " is the most affordable ride that comfortably fits everyone — " + fmtRupee(rec.car._price) + ".";
+    }else{
+      aiText.textContent =
+        "That's a lot for one car! With " + pax + " and " + bags + ", even the " + rec.car.name +
+        " (" + rec.car.seats + " seats, fits " + rec.car.luggage + " bags) may be a tight fit — consider two vehicles.";
+    }
+    aiCard.style.display = "flex";
+
+    var demandCard = document.getElementById("demandCard");
+    var demandText = document.getElementById("demandText");
+    demandCard.style.display = "flex";
+    if(demand.surge > 1){
+      demandText.textContent =
+        "Demand near " + state.pickup + " is currently " + demand.level +
+        ", so fares include a " + demand.surge.toFixed(2) + "x factor — but AI prepositioned nearby drivers, cutting your wait by about " +
+        demand.waitSavedMins + " min.";
+    }else{
+      demandText.textContent =
+        "Demand near " + state.pickup + " is " + demand.level + " right now — no surge, and drivers are readily available.";
+    }
+    fetchAgentExplanation("demand", {
+      demandLevel: demand.level,
+      surge: demand.surge,
+      waitSavedMins: demand.waitSavedMins,
+      pickup: state.pickup
+    }, demandText);
+
+    var recRow = carListEl.querySelector('[data-car="' + rec.car.id + '"]');
+    if(recRow) recRow.click();
+
+    document.getElementById("tripEta").textContent = rec.car._eta + " mins";
+    state.paymentMethod = null;
+    document.querySelectorAll(".payment-option").forEach(function(el){ el.classList.remove("selected"); });
+=======
     document.getElementById("tripEta").textContent = "— mins";
     state.paymentMethod = null;
     document.querySelectorAll(".payment-option").forEach(function(el){ el.classList.remove("selected"); });
     toStep3Btn.disabled = true;
+>>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
   }
 
   var rideLoadingOverlay = document.getElementById("rideLoadingOverlay");
 
+<<<<<<< HEAD
+  // ---------- AI safety monitoring ----------
+  // Simulates comparing the driver's live GPS path against the planned OSRM
+  // route (and watching for a driver drifting away instead of approaching).
+  // In a real system this would consume a live location feed; here it ticks
+  // every few seconds with a small chance of flagging a deviation, purely
+  // for demonstration purposes.
+  var safetyTimer = null;
+
+  function startSafetyMonitoring(){
+    clearInterval(safetyTimer);
+    var dot = document.getElementById("safetyDot");
+    var statusText = document.getElementById("safetyStatusText");
+    var sub = document.getElementById("safetySub");
+    var alertBtn = document.getElementById("alertContactBtn");
+
+    dot.className = "safety-dot ok";
+    statusText.textContent = "Live trip monitoring active";
+    sub.textContent = "AI is comparing your driver's live location to the planned route.";
+    alertBtn.style.display = "none";
+
+    var ticks = 0;
+    safetyTimer = setInterval(function(){
+      ticks++;
+      if(ticks > 6){ clearInterval(safetyTimer); return; }
+      // ~18% chance per check of a simulated deviation, for demo purposes
+      if(Math.random() < 0.18){
+        dot.className = "safety-dot alert";
+        statusText.textContent = "Route deviation detected";
+        sub.textContent = "Your driver has moved off the expected route. AI has flagged this trip for review.";
+        alertBtn.style.display = "inline-block";
+        fetchAgentExplanation("safety", { deviation:true, distanceKm: state.distanceKm }, sub);
+        clearInterval(safetyTimer);
+      }
+    }, 4000);
+  }
+
+  document.getElementById("alertContactBtn").addEventListener("click", function(){
+    window.alert("Demo: your emergency contact has been notified with your live trip location.");
+  });
+
+  toStep3Btn.addEventListener("click", function(){
+    if(!state.selectedCar || !state.paymentMethod) return;
+    var car = state.selectedCar;
+    // car._price already includes the demand surge multiplier; back out the
+    // distance-charge portion so the fare rows still add up to the total.
+    var distCharge = car._price - car.base;
+    var demand = state.demand || predictDemand(state.pickup);
+
+    var assignment = assignReliableDriver(car.id, {
+      distanceKm: state.distanceKm,
+      paymentMethod: state.paymentMethod,
+      demandLevel: demand.level
+    });
+    var driver = assignment.driver;
+
+    document.getElementById("confirmSub").textContent =
+      car.name + " confirmed for your ride to " + state.drop + ".";
+    document.getElementById("driverName").textContent = driver.name;
+    document.getElementById("driverInitial").textContent = driver.name.charAt(0);
+=======
   toStep3Btn.addEventListener("click", function(){
     if(!state.selectedCar || !state.paymentMethod) return;
     var car = state.selectedCar;
@@ -1584,6 +2255,7 @@
       car.name + " confirmed for your ride to " + state.drop + ".";
     document.getElementById("driverName").textContent = DRIVER_NAMES[Math.floor(Math.random()*DRIVER_NAMES.length)];
     document.getElementById("driverInitial").textContent = document.getElementById("driverName").textContent.charAt(0);
+>>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
     document.getElementById("driverCar").textContent = car.name + " • arriving in " + car._eta + " min";
     document.getElementById("otpVal").textContent = String(Math.floor(1000 + Math.random()*9000));
     document.getElementById("plateNo").textContent =
@@ -1598,6 +2270,29 @@
     document.getElementById("farePayment").textContent = paymentNames[state.paymentMethod] || "—";
     document.getElementById("fareTotal").textContent = fmtRupee(car._price);
 
+<<<<<<< HEAD
+    // AI dispatch agent: show the heuristic explanation immediately, then
+    // swap in the Groq-polished version once it comes back.
+    var driverCard = document.getElementById("driverAiCard");
+    var driverText = document.getElementById("driverAiText");
+    driverCard.style.display = "flex";
+    driverText.textContent =
+      driver.name + " assigned — predicted " + assignment.reliability +
+      "% reliable (low cancellation risk) among nearby " + car.name + " drivers. Demand nearby is " +
+      demand.level + ", so drivers were prepositioned to cut your wait.";
+    fetchAgentExplanation("driver-assignment", {
+      driverName: driver.name,
+      reliability: assignment.reliability,
+      rating: driver.rating,
+      demandLevel: demand.level,
+      waitSavedMins: demand.waitSavedMins,
+      distanceKm: state.distanceKm
+    }, driverText);
+
+    startSafetyMonitoring();
+
+=======
+>>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
     // play the sunny drive animation, then reveal the confirmation screen
     rideLoadingOverlay.classList.add("visible");
     setTimeout(function(){
@@ -1607,11 +2302,21 @@
   });
 
   document.getElementById("bookAnother").addEventListener("click", function(){
+<<<<<<< HEAD
+    clearInterval(safetyTimer);
+=======
+>>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
     pickupInput.value = "";
     dropInput.value = "";
     resolvedPoints.pickup = null;
     resolvedPoints.drop = null;
+<<<<<<< HEAD
+    state = {pickup:"", drop:"", distanceKm:0, etaMins:0, members:1, luggage:0, selectedCar:null, paymentMethod:null};
+    membersValEl.textContent = "1";
+    luggageValEl.textContent = "0";
+=======
     state = {pickup:"", drop:"", distanceKm:0, etaMins:0, selectedCar:null, paymentMethod:null};
+>>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
     document.querySelectorAll(".payment-option").forEach(function(el){ el.classList.remove("selected"); });
     routeMapEl.classList.remove("visible");
     mapStatusEl.textContent = "";
@@ -1623,13 +2328,23 @@
   logoutBtn.addEventListener("click", function(){
     var confirmLogout = window.confirm("Log out of go_travels?");
     if(!confirmLogout) return;
+<<<<<<< HEAD
+    clearInterval(safetyTimer);
+=======
+>>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
 
     // reset trip state
     pickupInput.value = "";
     dropInput.value = "";
     resolvedPoints.pickup = null;
     resolvedPoints.drop = null;
+<<<<<<< HEAD
+    state = {pickup:"", drop:"", distanceKm:0, etaMins:0, members:1, luggage:0, selectedCar:null, paymentMethod:null};
+    membersValEl.textContent = "1";
+    luggageValEl.textContent = "0";
+=======
     state = {pickup:"", drop:"", distanceKm:0, etaMins:0, selectedCar:null, paymentMethod:null};
+>>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
     document.querySelectorAll(".payment-option").forEach(function(el){ el.classList.remove("selected"); });
     routeMapEl.classList.remove("visible");
     mapStatusEl.textContent = "";
@@ -1648,5 +2363,110 @@
 
 })();
 </script>
+<<<<<<< HEAD
+
+<script>
+// ---------- AI support chat widget (talks to /api/support-chat, backed by Groq) ----------
+(function(){
+  "use strict";
+
+  var fab = document.getElementById("aiChatFab");
+  var panel = document.getElementById("aiChatPanel");
+  var closeBtn = document.getElementById("aiChatClose");
+  var messagesEl = document.getElementById("aiChatMessages");
+  var inputEl = document.getElementById("aiChatInput");
+  var sendBtn = document.getElementById("aiChatSend");
+  var chatHistory = [];
+
+  // Mirrors the server-side check so an emergency gets an instant, guaranteed
+  // response on-screen even before the network round trip to our own backend
+  // completes. The backend performs the same check independently — this is
+  // belt-and-braces, not a replacement for it.
+  var EMERGENCY_KEYWORDS = [
+    "emergency", "accident", "unsafe", "danger", "sos", "help me",
+    "assault", "harass", "police", "threat", "kidnap", "attacked",
+    "stranded", "robbed", "scared", "following me"
+  ];
+  var EMERGENCY_REPLY =
+    "🚨 If you're in immediate danger, call 112 (India's National Emergency Number) or 100 (Police) right now. " +
+    "You can also tap \"Alert emergency contact\" on your active trip screen to notify your saved contact instantly. " +
+    "Stay on the line with them if you can, and share your live location.";
+
+  function looksLikeEmergency(text){
+    var t = text.toLowerCase();
+    return EMERGENCY_KEYWORDS.some(function(k){ return t.indexOf(k) !== -1; });
+  }
+
+  function addMessage(text, cls){
+    var div = document.createElement("div");
+    div.className = "chat-msg " + cls;
+    div.textContent = text;
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return div;
+  }
+
+  function openChat(){
+    panel.classList.add("open");
+    if(!messagesEl.children.length){
+      addMessage(
+        "Hi! I'm the go_travels AI assistant. Ask me about fares, bookings, cancellations, or safety features. " +
+        "In an emergency, call 112 or 100 right away.",
+        "bot"
+      );
+    }
+    inputEl.focus();
+  }
+  function closeChat(){ panel.classList.remove("open"); }
+
+  fab.addEventListener("click", function(){
+    if(panel.classList.contains("open")) closeChat(); else openChat();
+  });
+  closeBtn.addEventListener("click", closeChat);
+
+  async function sendMessage(){
+    var text = inputEl.value.trim();
+    if(!text) return;
+    inputEl.value = "";
+    addMessage(text, "user");
+    chatHistory.push({ role:"user", content:text });
+
+    // Instant local emergency response — doesn't wait on any network call.
+    if(looksLikeEmergency(text)){
+      addMessage(EMERGENCY_REPLY, "emergency");
+    }
+
+    var typingEl = addMessage("Thinking…", "bot typing");
+
+    try{
+      var res = await fetch("/api/support-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text, history: chatHistory.slice(-8) })
+      });
+      var data = await res.json();
+      typingEl.remove();
+      if(data && data.reply){
+        // Avoid showing the emergency message twice if we already displayed
+        // the local instant version above.
+        if(!(data.emergency && looksLikeEmergency(text))){
+          addMessage(data.reply, data.emergency ? "emergency" : "bot");
+        }
+        chatHistory.push({ role:"assistant", content:data.reply });
+      }
+    }catch(err){
+      typingEl.remove();
+      addMessage("I couldn't reach support right now — please try again in a moment.", "bot");
+    }
+  }
+
+  sendBtn.addEventListener("click", sendMessage);
+  inputEl.addEventListener("keydown", function(e){
+    if(e.key === "Enter") sendMessage();
+  });
+})();
+</script>
+=======
+>>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
 </body>
 </html>

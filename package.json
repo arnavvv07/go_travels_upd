@@ -4,13 +4,29 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+<<<<<<< HEAD
+    "start": "node server.js",
+=======
+>>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+<<<<<<< HEAD
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^5.2.1",
+    "groq-sdk": "^1.4.1",
+    "mongodb": "^7.5.0"
+=======
   "dependencies": {
     "express": "^5.2.1"
+>>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
   }
 }
