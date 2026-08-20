@@ -1,101 +1,80 @@
-// ---------------------------------------------------------------------------
-// MongoDB storage layer (MongoDB Atlas — cloud-hosted)
-// ---------------------------------------------------------------------------
-// Requires MONGODB_URI in .env, e.g.:
-//   MONGODB_URI=mongodb+srv://user:pass@cluster0.xxxxx.mongodb.net/go_travels?retryWrites=true&w=majority
-//
-// Two collections:
-//   users        - one doc per phone number, tracks personal login_count
-//                  and first/last login timestamps
-//   login_events - append-only log, one doc per login
-// ---------------------------------------------------------------------------
-const { MongoClient } = require("mongodb");
+// Lightweight file-based store for login tracking.
+// Avoids needing a MongoDB Atlas account/connection string for a student
+// project — data is just kept in a local JSON file. On Render's free tier
+// this file resets on redeploy (ephemeral disk), which is fine for a demo;
+// swap this module out for a real database later if you need it to persist.
 
-const uri = process.env.MONGODB_URI;
-if (!uri) {
-  console.warn(
-    "WARNING: MONGODB_URI is not set. /api/login and /api/login/stats will fail until it's configured in .env"
-  );
+const fs = require("fs");
+const path = require("path");
+
+const DATA_FILE = path.join(__dirname, "data", "logins.json");
+
+function ensureStore() {
+    const dir = path.dirname(DATA_FILE);
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+    }
+    if (!fs.existsSync(DATA_FILE)) {
+        fs.writeFileSync(DATA_FILE, JSON.stringify({ users: {}, loginEvents: [] }, null, 2));
+    }
 }
 
-const client = uri ? new MongoClient(uri) : null;
-
-let dbPromise = null;
-let indexesReady = false;
-
-// Lazily connects once and reuses the connection for every request
-// (the recommended pattern for the MongoDB driver — don't reconnect per call).
-function getDb() {
-  if (!client) {
-    return Promise.reject(new Error("MONGODB_URI is not configured"));
-  }
-  if (!dbPromise) {
-    dbPromise = client.connect().then(async (c) => {
-      const database = c.db(); // uses the db name from the URI (e.g. "go_travels")
-      if (!indexesReady) {
-        await database.collection("users").createIndex({ phone: 1 }, { unique: true });
-        await database.collection("login_events").createIndex({ created_at: -1 });
-        indexesReady = true;
-      }
-      return database;
-    });
-  }
-  return dbPromise;
+function readStore() {
+    ensureStore();
+    try {
+        return JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
+    } catch (err) {
+        return { users: {}, loginEvents: [] };
+    }
 }
 
-/**
- * Records a login for the given phone/name: upserts the user doc
- * (incrementing their personal login_count) and inserts a login_event.
- * Returns the updated user + overall stats.
- */
+function writeStore(store) {
+    fs.writeFileSync(DATA_FILE, JSON.stringify(store, null, 2));
+}
+
 async function recordLogin(phone, name) {
-  phone = String(phone || "").trim();
-  name = String(name || "").trim();
-  if (!phone) throw new Error("phone is required");
+    const store = readStore();
+    const key = String(phone).trim();
 
-  const database = await getDb();
-  const users = database.collection("users");
-  const loginEvents = database.collection("login_events");
+    if (!store.users[key]) {
+        store.users[key] = {
+            phone: key,
+            name: name || "",
+            login_count: 0,
+            first_login: new Date().toISOString()
+        };
+    }
 
-  const now = new Date();
+    store.users[key].login_count += 1;
+    store.users[key].last_login = new Date().toISOString();
+    if (name) store.users[key].name = name;
 
-  await users.updateOne(
-    { phone },
-    {
-      $set: { last_login_at: now, ...(name ? { name } : {}) },
-      $setOnInsert: { first_login_at: now },
-      $inc: { login_count: 1 }
-    },
-    { upsert: true }
-  );
+    store.loginEvents.push({ phone: key, name: name || "", at: new Date().toISOString() });
+    // keep the event log from growing forever
+    if (store.loginEvents.length > 2000) {
+        store.loginEvents = store.loginEvents.slice(-2000);
+    }
 
-  await loginEvents.insertOne({ phone, name, created_at: now });
+    writeStore(store);
 
-  const [user, totalLogins, uniqueUsers] = await Promise.all([
-    users.findOne({ phone }),
-    loginEvents.countDocuments(),
-    users.countDocuments()
-  ]);
-
-  return { user, totalLogins, uniqueUsers };
+    return {
+        user: store.users[key],
+        totalLogins: store.loginEvents.length,
+        uniqueUsers: Object.keys(store.users).length
+    };
 }
 
-async function getStats(recentLimit) {
-  const database = await getDb();
-  const users = database.collection("users");
-  const loginEvents = database.collection("login_events");
+async function getStats(limit) {
+    const store = readStore();
+    const users = Object.values(store.users)
+        .sort((a, b) => new Date(b.last_login) - new Date(a.last_login))
+        .slice(0, limit || 20);
 
-  const [totalLogins, uniqueUsers, recent] = await Promise.all([
-    loginEvents.countDocuments(),
-    users.countDocuments(),
-    loginEvents
-      .find({}, { projection: { _id: 0, phone: 1, name: 1, created_at: 1 } })
-      .sort({ created_at: -1 })
-      .limit(recentLimit || 10)
-      .toArray()
-  ]);
-
-  return { totalLogins, uniqueUsers, recent };
+    return {
+        totalLogins: store.loginEvents.length,
+        uniqueUsers: Object.keys(store.users).length,
+        recentUsers: users
+    };
 }
 
 module.exports = { recordLogin, getStats };
