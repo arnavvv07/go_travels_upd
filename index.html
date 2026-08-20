@@ -184,6 +184,59 @@
   }
 
   /* ---- Route visual (signature element) ---- */
+  .nl-command-card{
+    background:linear-gradient(165deg, rgba(47,143,224,0.10), rgba(255,138,61,0.06));
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:14px 16px;
+    margin-bottom:16px;
+  }
+  .nl-command-card label{
+    display:block;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:8px;
+  }
+  .nl-command-row{
+    display:flex;
+    gap:8px;
+  }
+  .nl-command-row input{
+    flex:1;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:11px;
+    padding:11px 13px;
+    color:var(--text);
+    font-size:13.5px;
+    font-family:inherit;
+  }
+  .nl-command-row input::placeholder{color:var(--muted); opacity:0.8;}
+  .nl-command-row input:focus{outline:none; border-color:var(--teal);}
+  .nl-command-row button{
+    flex-shrink:0;
+    width:42px;
+    background:linear-gradient(135deg, var(--teal), var(--amber));
+    border:none;
+    border-radius:11px;
+    color:#0B1220;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+  }
+  .nl-command-row button svg{width:18px;height:18px;}
+  .nl-command-row button:disabled{opacity:0.5; cursor:not-allowed;}
+  .nl-command-status{
+    font-size:12px;
+    color:var(--muted);
+    margin-top:8px;
+    min-height:16px;
+  }
+  .nl-command-status.ok{color:var(--teal);}
+  .nl-command-status.err{color:var(--danger);}
+
   .route-card{
     background:var(--surface);
     border:1px solid var(--line);
@@ -259,7 +312,6 @@
   }
   .swap-btn:hover{color:var(--amber); border-color:var(--amber); transform:rotate(180deg);}
 
-<<<<<<< HEAD
   /* ---- passenger / luggage counters ---- */
   .counter-row{
     display:flex; gap:12px; margin-bottom:20px;
@@ -322,8 +374,6 @@
     margin-top:5px;
   }
 
-=======
->>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
   .quick-tags{
     display:flex; gap:8px; flex-wrap:wrap; margin-bottom:22px;
   }
@@ -704,7 +754,6 @@
   }
   .plate b{color:var(--text); letter-spacing:0.05em;}
 
-<<<<<<< HEAD
   /* ---- AI safety monitoring panel ---- */
   .safety-panel{
     background:var(--surface);
@@ -854,8 +903,6 @@
   }
   .ai-chat-emergency-hint b{color:var(--danger);}
 
-=======
->>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
   ::selection{background:rgba(242,169,59,0.3);}
 
   /* ---- auth: login / signup ---- */
@@ -1093,11 +1140,18 @@
     <section class="screen" id="screen-1">
       <p class="auth-hint" id="userGreeting" style="margin-bottom:14px;"></p>
       <h1 class="page-title">Where's the ride<br>taking you?</h1>
-<<<<<<< HEAD
       <p class="page-sub">Enter pickup, drop, passengers &amp; luggage — our AI assistant will pick the most affordable ride that fits.</p>
-=======
-      <p class="page-sub">Enter pickup &amp; drop to see prices for every car type.</p>
->>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
+
+      <div class="nl-command-card">
+        <label for="nlCommand">Or just tell the AI what you need</label>
+        <div class="nl-command-row">
+          <input type="text" id="nlCommand" placeholder='e.g. "Book a cab from VIT Chennai to Chennai Airport tomorrow at 6pm"'>
+          <button type="button" id="nlCommandBtn" title="Fill from command">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+          </button>
+        </div>
+        <p class="nl-command-status" id="nlCommandStatus"></p>
+      </div>
 
       <div class="route-card">
         <div class="route-row">
@@ -1127,7 +1181,6 @@
       <div id="routeMap"></div>
       <p class="map-status" id="mapStatus"></p>
 
-<<<<<<< HEAD
       <div class="counter-row">
         <div class="counter-field">
           <label>Passengers</label>
@@ -1147,8 +1200,6 @@
         </div>
       </div>
 
-=======
->>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
       <div class="quick-tags">
         <button type="button" data-fill-pickup="Home">📍 Home</button>
         <button type="button" data-fill-pickup="VIT Chennai Campus">🎓 Campus</button>
@@ -1183,7 +1234,6 @@
         <div class="dot-drop" style="width:8px;height:8px;"></div>
       </div>
 
-<<<<<<< HEAD
       <div class="ai-suggest-card" id="demandCard" style="display:none;">
         <div class="ai-suggest-icon">📈</div>
         <div>
@@ -1200,8 +1250,6 @@
         </div>
       </div>
 
-=======
->>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
       <div class="car-list" id="carList"><!-- populated by JS --></div>
 
       <p class="section-label">Payment method</p>
@@ -1252,7 +1300,6 @@
         </div>
       </div>
 
-<<<<<<< HEAD
       <div class="ai-suggest-card" id="driverAiCard" style="display:none;">
         <div class="ai-suggest-icon">🚦</div>
         <div>
@@ -1270,8 +1317,6 @@
         <button type="button" class="btn-ghost" id="alertContactBtn" style="display:none;">🚨 Alert emergency contact</button>
       </div>
 
-=======
->>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
       <div class="fare-card">
         <div class="fare-row"><span id="fareCarName">Car type</span><span id="fareDist">— km</span></div>
         <div class="fare-row"><span>Base fare</span><span id="fareBase">₹0</span></div>
@@ -1311,7 +1356,6 @@
   </div>
 </div>
 
-<<<<<<< HEAD
 <!-- AI support chat widget -->
 <button type="button" class="ai-chat-fab" id="aiChatFab" title="Ask AI support" aria-label="Ask AI support">🤖</button>
 
@@ -1331,27 +1375,22 @@
   <div class="ai-chat-emergency-hint">🚨 Emergency? Call <b>112</b> (National) or <b>100</b> (Police) anytime.</div>
 </div>
 
-=======
->>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 (function(){
   "use strict";
 
   // ---------- state ----------
-  var state = {
-    pickup: "",
-    drop: "",
-    distanceKm: 0,
-    etaMins: 0,
-<<<<<<< HEAD
-    members: 1,
-    luggage: 0,
-=======
->>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
-    selectedCar: null,
-    paymentMethod: null
-  };
+var state = {
+  pickup: "",
+  drop: "",
+  distanceKm: 0,
+  etaMins: 0,
+  members: 1,
+  luggage: 0,
+  selectedCar: null,
+  paymentMethod: null
+};
 
   var authState = {
     mode: "existing",   // "existing" | "new"
@@ -1368,11 +1407,8 @@
       base: 40,
       perKm: 8,
       speedKmh: 22,
-<<<<<<< HEAD
       seats: 4,
       luggage: 2,
-=======
->>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
       icon: '<path d="M4 15l1.4-4.8A2 2 0 0 1 7.3 9h9.4a2 2 0 0 1 1.9 1.2L20 15" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7.5" cy="16" r="1.5" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="16.5" cy="16" r="1.5" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M4 15h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>'
     },
     {
@@ -1382,11 +1418,8 @@
       base: 60,
       perKm: 11,
       speedKmh: 25,
-<<<<<<< HEAD
       seats: 4,
       luggage: 3,
-=======
->>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
       icon: '<path d="M3 15l1.2-4.5A2.4 2.4 0 0 1 6.5 9h11a2.4 2.4 0 0 1 2.3 1.5L21 15" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 9l1.6-3.2A2 2 0 0 1 9.4 5h5.2a2 2 0 0 1 1.8 1.1L18 9" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7" cy="16" r="1.5" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="17" cy="16" r="1.5" stroke="currentColor" stroke-width="1.8" fill="none"/>'
     },
     {
@@ -1396,11 +1429,8 @@
       base: 80,
       perKm: 14,
       speedKmh: 24,
-<<<<<<< HEAD
       seats: 6,
       luggage: 5,
-=======
->>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
       icon: '<path d="M2.5 15.5l1.3-5.5A2.3 2.3 0 0 1 6 8.2h12a2.3 2.3 0 0 1 2.2 1.7l1.3 5.6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 8.2l1.3-2.6A2 2 0 0 1 8.6 4.5h6.8a2 2 0 0 1 1.8 1.1l1.3 2.6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.8" cy="16.2" r="1.6" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="17.2" cy="16.2" r="1.6" stroke="currentColor" stroke-width="1.8" fill="none"/>'
     },
     {
@@ -1410,16 +1440,12 @@
       base: 120,
       perKm: 18,
       speedKmh: 24,
-<<<<<<< HEAD
       seats: 6,
       luggage: 5,
-=======
->>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
       icon: '<path d="M2.5 15.5l1.3-5.5A2.3 2.3 0 0 1 6 8.2h12a2.3 2.3 0 0 1 2.2 1.7l1.3 5.6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 8.2l1.3-2.6A2 2 0 0 1 8.6 4.5h6.8a2 2 0 0 1 1.8 1.1l1.3 2.6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.8" cy="16.2" r="1.6" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="17.2" cy="16.2" r="1.6" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M12 2.4l.6 1.3 1.4.2-1 1 .25 1.4L12 4.6l-1.25.7.25-1.4-1-1 1.4-.2z" fill="currentColor"/>'
     }
   ];
 
-<<<<<<< HEAD
   // ---------- Agentic layer: driver reliability + demand prediction ----------
   // Small mock driver pool. baseCancelRate is a stand-in for "this driver's
   // historical cancellation rate" — in a real system this would come from a
@@ -1498,9 +1524,6 @@
       // keep the heuristic fallback text already on screen
     }
   }
-=======
-  var DRIVER_NAMES = ["Suresh Kumar","Arjun Nair","Vignesh R","Karthik S","Manoj T","Praveen M","Sathish V","Dinesh K"];
->>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
 
   // deterministic pseudo distance from pickup+drop text so the same pair always gives the same number
   function hashString(str){
@@ -1512,18 +1535,13 @@
   }
 
   function computeDistance(pickup, drop){
-<<<<<<< HEAD
     // last-resort fallback only — used when we don't even have coordinates
     // for one of the two points (geocoding itself failed)
-=======
-    // fallback only — used if the live map/routing lookup below fails
->>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
     var h = hashString(pickup.trim().toLowerCase() + "|" + drop.trim().toLowerCase());
     var km = 2.5 + (h % 2550) / 100;
     return Math.round(km * 10) / 10;
   }
 
-<<<<<<< HEAD
   // Straight-line ("as the crow flies") distance between two lat/lng points,
   // in km. Used as a much more accurate fallback than a random guess when we
   // have real coordinates but the road-routing service is unavailable.
@@ -1539,8 +1557,6 @@
     return R * c;
   }
 
-=======
->>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
   // ---------- Live map + real distance (Leaflet + OSM Nominatim + OSRM) ----------
   var routeMapEl = document.getElementById("routeMap");
   var mapStatusEl = document.getElementById("mapStatus");
@@ -1597,7 +1613,6 @@
     };
   }
 
-<<<<<<< HEAD
   function drawMapMarkers(pickupPoint, dropPoint, pathCoords){
     ensureMapInit();
     routeMapEl.classList.add("visible");
@@ -1620,8 +1635,6 @@
     leafletMap.fitBounds(routeLine.getBounds(), { padding:[18,18] });
   }
 
-=======
->>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
   // Looks up real coordinates + a real driving distance for the pickup/drop text.
   // Falls back to the pseudo-random distance if the location can't be found or the
   // network call fails (e.g. offline), so the app never gets stuck.
@@ -1641,7 +1654,6 @@
       mapStatusEl.textContent = "Calculating route…";
       var route = await fetchRoute(pickupPoint, dropPoint);
       if(!route){
-<<<<<<< HEAD
         // Road-routing service is unavailable (it's a shared free demo
         // server and does go down/rate-limit) — but we DO have real
         // coordinates from geocoding, so use straight-line distance scaled
@@ -1658,26 +1670,6 @@
       }
 
       drawMapMarkers(pickupPoint, dropPoint, route.coords);
-=======
-        mapStatusEl.textContent = "Couldn't calculate a route — showing an estimate instead.";
-        return computeDistance(pickup, drop);
-      }
-
-      ensureMapInit();
-      routeMapEl.classList.add("visible");
-      leafletMap.invalidateSize();
-
-      if(routeLine) leafletMap.removeLayer(routeLine);
-      if(pickupMarker) leafletMap.removeLayer(pickupMarker);
-      if(dropMarker) leafletMap.removeLayer(dropMarker);
-
-      routeLine = L.polyline(route.coords, { color: "#F2A93B", weight: 4 }).addTo(leafletMap);
-      pickupMarker = L.circleMarker([pickupPoint.lat, pickupPoint.lng], { radius:6, color:"#3FD6C4", fillColor:"#3FD6C4", fillOpacity:1 })
-        .addTo(leafletMap).bindPopup("Pickup: " + pickupPoint.matchedName);
-      dropMarker = L.circleMarker([dropPoint.lat, dropPoint.lng], { radius:6, color:"#F2A93B", fillColor:"#F2A93B", fillOpacity:1 })
-        .addTo(leafletMap).bindPopup("Drop: " + dropPoint.matchedName);
-      leafletMap.fitBounds(routeLine.getBounds(), { padding:[18,18] });
->>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
 
       // Show a short version of what was actually matched, so a wrong pick
       // (e.g. a same-named place in another area) is obvious immediately.
@@ -1696,7 +1688,6 @@
     return "₹" + Math.round(n).toLocaleString("en-IN");
   }
 
-<<<<<<< HEAD
   // ---------- AI ride assistant ----------
   // A small rules-based agent: given how many people and bags are travelling,
   // it filters to cars that can actually fit everyone, then recommends the
@@ -1721,8 +1712,6 @@
     return { car: roomiest, fits: false };
   }
 
-=======
->>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
   // ---------- screen transitions ----------
   var screens = document.querySelectorAll(".screen");
   var dots = document.querySelectorAll(".step-dots .dot");
@@ -1879,7 +1868,6 @@
     }else{
       greeting.textContent = "Welcome back! Logged in as +91 " + authState.phone.slice(0,2) + "XXXXX" + authState.phone.slice(7);
     }
-<<<<<<< HEAD
     recordLogin(authState.phone, authState.name);
     goToScreen(3);
   });
@@ -1899,10 +1887,6 @@
       // non-critical — ignore
     }
   }
-=======
-    goToScreen(3);
-  });
->>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
   var pickupInput = document.getElementById("pickup");
   var dropInput = document.getElementById("drop");
   var toStep2Btn = document.getElementById("toStep2");
@@ -1976,6 +1960,66 @@
   setupAutocomplete(pickupInput, document.getElementById("pickupSuggest"), "pickup");
   setupAutocomplete(dropInput, document.getElementById("dropSuggest"), "drop");
 
+  // ---------- Agentic layer: natural-language booking command ----------
+  var nlCommandInput = document.getElementById("nlCommand");
+  var nlCommandBtn = document.getElementById("nlCommandBtn");
+  var nlCommandStatus = document.getElementById("nlCommandStatus");
+  state.scheduledFor = null; // { date, time } if the command mentioned one
+
+  async function runNlCommand(){
+    var command = nlCommandInput.value.trim();
+    if(!command) return;
+
+    nlCommandBtn.disabled = true;
+    nlCommandStatus.className = "nl-command-status";
+    nlCommandStatus.textContent = "Reading your request…";
+
+    try{
+      var res = await fetch("/api/parse-booking", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ command: command, now: new Date().toISOString() })
+      });
+      var data = await res.json();
+
+      if(!data || (!data.pickup && !data.drop)){
+        nlCommandStatus.className = "nl-command-status err";
+        nlCommandStatus.textContent = "Couldn't find a pickup and drop in that — try including both, e.g. \"from X to Y\".";
+        return;
+      }
+
+      if(data.pickup){
+        pickupInput.value = data.pickup;
+        resolvedPoints.pickup = null; // typed by AI, not a confirmed map suggestion — will be geocoded
+      }
+      if(data.drop){
+        dropInput.value = data.drop;
+        resolvedPoints.drop = null;
+      }
+      state.scheduledFor = (data.date || data.time) ? { date: data.date, time: data.time } : null;
+
+      var parts = [];
+      if(data.pickup && data.drop) parts.push(data.pickup + " → " + data.drop);
+      if(data.date) parts.push("on " + data.date);
+      if(data.time) parts.push("at " + data.time);
+      nlCommandStatus.className = "nl-command-status ok";
+      nlCommandStatus.textContent = "Got it: " + parts.join(" ") + ". Fields filled below" +
+        (data.source === "fallback" ? " (offline parser)" : "") + " — review and continue.";
+
+      validateStep1();
+    }catch(err){
+      nlCommandStatus.className = "nl-command-status err";
+      nlCommandStatus.textContent = "Couldn't reach the AI parser — you can still fill the fields below manually.";
+    }finally{
+      nlCommandBtn.disabled = false;
+    }
+  }
+
+  nlCommandBtn.addEventListener("click", runNlCommand);
+  nlCommandInput.addEventListener("keydown", function(e){
+    if(e.key === "Enter"){ e.preventDefault(); runNlCommand(); }
+  });
+
   function validateStep1(){
     var ok = pickupInput.value.trim().length > 1 && dropInput.value.trim().length > 1 &&
              pickupInput.value.trim().toLowerCase() !== dropInput.value.trim().toLowerCase();
@@ -1984,7 +2028,6 @@
   pickupInput.addEventListener("input", validateStep1);
   dropInput.addEventListener("input", validateStep1);
 
-<<<<<<< HEAD
   var membersValEl = document.getElementById("membersVal");
   var luggageValEl = document.getElementById("luggageVal");
   document.querySelectorAll("[data-counter]").forEach(function(btn){
@@ -1998,8 +2041,6 @@
     });
   });
 
-=======
->>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
   swapBtn.addEventListener("click", function(){
     var tmp = pickupInput.value;
     pickupInput.value = dropInput.value;
@@ -2040,7 +2081,8 @@
     toStep2Btn.disabled = false;
 
     buildCarList();
-    document.getElementById("tripFromTo").textContent = state.pickup + "  →  " + state.drop;
+    document.getElementById("tripFromTo").textContent = state.pickup + "  →  " + state.drop +
+      (state.scheduledFor ? "  (" + [state.scheduledFor.date, state.scheduledFor.time].filter(Boolean).join(" ") + ")" : "");
     document.getElementById("tripDist").textContent = state.distanceKm + " km";
     document.getElementById("distanceLine").textContent =
       "Estimated distance: " + state.distanceKm + " km. Prices below update instantly per car type.";
@@ -2079,7 +2121,6 @@
 
   function buildCarList(){
     carListEl.innerHTML = "";
-<<<<<<< HEAD
 
     var demand = predictDemand(state.pickup);
     state.demand = demand; // remembered so the confirm step can reuse the same level
@@ -2095,14 +2136,6 @@
 
     CAR_TYPES.forEach(function(car){
       var isRec = car.id === rec.car.id;
-=======
-    CAR_TYPES.forEach(function(car){
-      var price = car.base + car.perKm * state.distanceKm;
-      var etaMins = Math.round((state.distanceKm / car.speedKmh) * 60) + 3; // +3 min pickup buffer
-      car._price = Math.round(price);
-      car._eta = etaMins;
-
->>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
       var row = document.createElement("div");
       row.className = "car-option";
       row.setAttribute("data-car", car.id);
@@ -2111,10 +2144,7 @@
         '<div class="car-info">' +
           '<div class="name">' + car.name + '</div>' +
           '<div class="sub">' + car.sub + '</div>' +
-<<<<<<< HEAD
           (isRec ? '<div><span class="ai-badge">🤖 AI Pick</span></div>' : '') +
-=======
->>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
         '</div>' +
         '<div class="car-price">' +
           '<div class="amt">' + fmtRupee(car._price) + '</div>' +
@@ -2131,7 +2161,6 @@
 
       carListEl.appendChild(row);
     });
-<<<<<<< HEAD
 
     // Show the AI assistant's reasoning and default the selection to its pick —
     // the rider can still tap any other car to override it.
@@ -2175,17 +2204,10 @@
     document.getElementById("tripEta").textContent = rec.car._eta + " mins";
     state.paymentMethod = null;
     document.querySelectorAll(".payment-option").forEach(function(el){ el.classList.remove("selected"); });
-=======
-    document.getElementById("tripEta").textContent = "— mins";
-    state.paymentMethod = null;
-    document.querySelectorAll(".payment-option").forEach(function(el){ el.classList.remove("selected"); });
-    toStep3Btn.disabled = true;
->>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
   }
 
   var rideLoadingOverlay = document.getElementById("rideLoadingOverlay");
 
-<<<<<<< HEAD
   // ---------- AI safety monitoring ----------
   // Simulates comparing the driver's live GPS path against the planned OSRM
   // route (and watching for a driver drifting away instead of approaching).
@@ -2245,17 +2267,6 @@
       car.name + " confirmed for your ride to " + state.drop + ".";
     document.getElementById("driverName").textContent = driver.name;
     document.getElementById("driverInitial").textContent = driver.name.charAt(0);
-=======
-  toStep3Btn.addEventListener("click", function(){
-    if(!state.selectedCar || !state.paymentMethod) return;
-    var car = state.selectedCar;
-    var distCharge = car.perKm * state.distanceKm;
-
-    document.getElementById("confirmSub").textContent =
-      car.name + " confirmed for your ride to " + state.drop + ".";
-    document.getElementById("driverName").textContent = DRIVER_NAMES[Math.floor(Math.random()*DRIVER_NAMES.length)];
-    document.getElementById("driverInitial").textContent = document.getElementById("driverName").textContent.charAt(0);
->>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
     document.getElementById("driverCar").textContent = car.name + " • arriving in " + car._eta + " min";
     document.getElementById("otpVal").textContent = String(Math.floor(1000 + Math.random()*9000));
     document.getElementById("plateNo").textContent =
@@ -2270,7 +2281,6 @@
     document.getElementById("farePayment").textContent = paymentNames[state.paymentMethod] || "—";
     document.getElementById("fareTotal").textContent = fmtRupee(car._price);
 
-<<<<<<< HEAD
     // AI dispatch agent: show the heuristic explanation immediately, then
     // swap in the Groq-polished version once it comes back.
     var driverCard = document.getElementById("driverAiCard");
@@ -2291,8 +2301,6 @@
 
     startSafetyMonitoring();
 
-=======
->>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
     // play the sunny drive animation, then reveal the confirmation screen
     rideLoadingOverlay.classList.add("visible");
     setTimeout(function(){
@@ -2302,21 +2310,14 @@
   });
 
   document.getElementById("bookAnother").addEventListener("click", function(){
-<<<<<<< HEAD
     clearInterval(safetyTimer);
-=======
->>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
     pickupInput.value = "";
     dropInput.value = "";
     resolvedPoints.pickup = null;
     resolvedPoints.drop = null;
-<<<<<<< HEAD
     state = {pickup:"", drop:"", distanceKm:0, etaMins:0, members:1, luggage:0, selectedCar:null, paymentMethod:null};
     membersValEl.textContent = "1";
     luggageValEl.textContent = "0";
-=======
-    state = {pickup:"", drop:"", distanceKm:0, etaMins:0, selectedCar:null, paymentMethod:null};
->>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
     document.querySelectorAll(".payment-option").forEach(function(el){ el.classList.remove("selected"); });
     routeMapEl.classList.remove("visible");
     mapStatusEl.textContent = "";
@@ -2328,23 +2329,16 @@
   logoutBtn.addEventListener("click", function(){
     var confirmLogout = window.confirm("Log out of go_travels?");
     if(!confirmLogout) return;
-<<<<<<< HEAD
     clearInterval(safetyTimer);
-=======
->>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
 
     // reset trip state
     pickupInput.value = "";
     dropInput.value = "";
     resolvedPoints.pickup = null;
     resolvedPoints.drop = null;
-<<<<<<< HEAD
     state = {pickup:"", drop:"", distanceKm:0, etaMins:0, members:1, luggage:0, selectedCar:null, paymentMethod:null};
     membersValEl.textContent = "1";
     luggageValEl.textContent = "0";
-=======
-    state = {pickup:"", drop:"", distanceKm:0, etaMins:0, selectedCar:null, paymentMethod:null};
->>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
     document.querySelectorAll(".payment-option").forEach(function(el){ el.classList.remove("selected"); });
     routeMapEl.classList.remove("visible");
     mapStatusEl.textContent = "";
@@ -2363,7 +2357,6 @@
 
 })();
 </script>
-<<<<<<< HEAD
 
 <script>
 // ---------- AI support chat widget (talks to /api/support-chat, backed by Groq) ----------
@@ -2466,7 +2459,5 @@
   });
 })();
 </script>
-=======
->>>>>>> 42beb36f5b10186e859d004bab219e62a5e92d72
 </body>
 </html>
