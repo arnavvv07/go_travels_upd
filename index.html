@@ -1,0 +1,2647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>go_travels — Book a Ride</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  #routeMap{
+    height:220px;
+    border-radius:14px;
+    margin-bottom:18px;
+    border:1px solid var(--line);
+    background:var(--surface);
+    display:none;
+  }
+  #routeMap.visible{display:block;}
+  .map-status{
+    font-size:12.5px;
+    color:var(--muted);
+    margin:-10px 0 14px;
+    min-height:16px;
+  }
+  :root{
+    --bg: #0B1220;
+    --surface: #121A2C;
+    --surface-2: #182238;
+    --line: #263049;
+    --amber: #FF8A3D;
+    --teal: #2F8FE0;
+    --text: #EDEFF5;
+    --muted: #8A94AA;
+    --danger: #E8607A;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    background:
+      radial-gradient(600px 300px at 15% -5%, rgba(255,138,61,0.11), transparent 60%),
+      radial-gradient(700px 400px at 100% 0%, rgba(47,143,224,0.13), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  .display{font-family:'Segoe UI', 'Trebuchet MS', system-ui, sans-serif;}
+
+  /* ---- App shell ---- */
+  .app{
+    max-width:460px;
+    margin:0 auto;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+  }
+  header.topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:22px 22px 10px;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:11px;
+  }
+  .brand-text{
+    display:flex;
+    flex-direction:column;
+    line-height:1.2;
+  }
+  .brand-name{
+    font-family:'Segoe UI', 'Trebuchet MS', system-ui, sans-serif;
+    font-weight:700;
+    font-size:19px;
+    letter-spacing:0.2px;
+    background:linear-gradient(100deg, var(--teal) 0%, #6FB8FF 35%, var(--amber) 100%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  .brand-tagline{
+    font-size:9.5px;
+    font-weight:600;
+    letter-spacing:0.09em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-top:1px;
+  }
+  .brand-mark{
+    width:38px;height:38px;
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+    filter:drop-shadow(0 4px 10px rgba(46,139,255,0.30)) drop-shadow(0 2px 8px rgba(255,138,61,0.20));
+  }
+  .brand-mark img{width:100%;height:100%;object-fit:contain;}
+  .step-dots{display:flex; gap:6px;}
+  .step-dots span{
+    width:7px;height:7px;border-radius:50%;
+    background:var(--line);
+    transition:background .3s ease, transform .3s ease;
+  }
+  .step-dots span.active{background:var(--amber); transform:scale(1.2);}
+
+  .header-right{
+    display:flex;
+    align-items:center;
+    gap:14px;
+  }
+  .logout-btn{
+    width:30px; height:30px;
+    border-radius:8px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    color:var(--muted);
+    cursor:pointer;
+    transition:color .2s ease, border-color .2s ease, background .2s ease;
+  }
+  .logout-btn svg{width:15px; height:15px;}
+  .logout-btn:hover{color:var(--danger); border-color:var(--danger); background:rgba(232,96,122,0.08);}
+
+  main{
+    flex:1;
+    position:relative;
+  }
+
+  .screen{
+    position:absolute;
+    inset:0;
+    padding:6px 22px 28px;
+    display:flex;
+    flex-direction:column;
+    opacity:0;
+    transform:translateX(24px);
+    pointer-events:none;
+    transition:opacity .38s ease, transform .38s ease;
+  }
+  .screen.active{
+    position:relative;
+    opacity:1;
+    transform:translateX(0);
+    pointer-events:auto;
+  }
+  .screen.leaving{
+    transform:translateX(-24px);
+  }
+
+  h1.page-title{
+    font-family:'Segoe UI', 'Trebuchet MS', system-ui, sans-serif;
+    font-weight:600;
+    font-size:28px;
+    line-height:1.22;
+    letter-spacing:-0.2px;
+    margin-bottom:8px;
+  }
+  .grad-text{
+    background:linear-gradient(100deg, #FFE1A8 0%, var(--amber) 45%, var(--teal) 130%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  .hero-logo{
+    display:block;
+    width:min(78%, 300px);
+    margin:6px auto 4px;
+    filter:drop-shadow(0 10px 26px rgba(46,139,255,0.22)) drop-shadow(0 6px 18px rgba(255,138,61,0.18));
+  }
+  .hero-tagline{
+    text-align:center;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--amber);
+    margin-bottom:22px;
+  }
+  p.page-sub{
+    color:var(--muted);
+    font-size:14px;
+    margin-bottom:26px;
+  }
+
+  /* ---- Route visual (signature element) ---- */
+  .traffic-badge{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:11px;
+    padding:9px 13px;
+    margin-bottom:14px;
+    font-size:12.5px;
+    color:var(--muted);
+  }
+  .tb-dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--teal);
+    flex-shrink:0;
+    box-shadow:0 0 8px currentColor;
+  }
+  .tb-dot.moderate{background:var(--amber); color:var(--amber);}
+  .tb-dot.high{background:var(--danger); color:var(--danger);}
+  .tb-dot.low{background:var(--teal); color:var(--teal);}
+
+  .nl-command-card{
+    background:linear-gradient(165deg, rgba(47,143,224,0.10), rgba(255,138,61,0.06));
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:14px 16px;
+    margin-bottom:16px;
+  }
+  .nl-command-card label{
+    display:block;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:8px;
+  }
+  .nl-command-row{
+    display:flex;
+    gap:8px;
+  }
+  .nl-command-row input{
+    flex:1;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:11px;
+    padding:11px 13px;
+    color:var(--text);
+    font-size:13.5px;
+    font-family:inherit;
+  }
+  .nl-command-row input::placeholder{color:var(--muted); opacity:0.8;}
+  .nl-command-row input:focus{outline:none; border-color:var(--teal);}
+  .nl-command-row button{
+    flex-shrink:0;
+    width:42px;
+    background:linear-gradient(135deg, var(--teal), var(--amber));
+    border:none;
+    border-radius:11px;
+    color:#0B1220;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+  }
+  .nl-command-row button svg{width:18px;height:18px;}
+  .nl-command-row button:disabled{opacity:0.5; cursor:not-allowed;}
+  #micBtn{background:var(--surface-2); border:1px solid var(--line); color:var(--text);}
+  #micBtn.listening{
+    background:linear-gradient(135deg, #ff6b6b, #E8607A);
+    color:#fff;
+    animation:micPulse 1.2s ease-in-out infinite;
+  }
+  @keyframes micPulse{
+    0%,100%{ box-shadow:0 0 0 0 rgba(232,96,122,0.5); }
+    50%{ box-shadow:0 0 0 8px rgba(232,96,122,0); }
+  }
+  .nl-command-status{
+    font-size:12px;
+    color:var(--muted);
+    margin-top:8px;
+    min-height:16px;
+  }
+  .nl-command-status.ok{color:var(--teal);}
+  .nl-command-status.err{color:var(--danger);}
+
+  .route-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:20px 18px;
+    margin-bottom:18px;
+    position:relative;
+    overflow:hidden;
+  }
+  .route-row{
+    display:flex;
+    align-items:flex-start;
+    gap:14px;
+    position:relative;
+    padding:8px 0;
+  }
+  .route-track{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    width:16px;
+    padding-top:4px;
+  }
+  .dot-pickup, .dot-drop{
+    width:11px;height:11px;border-radius:50%;
+    flex-shrink:0;
+  }
+  .dot-pickup{background:var(--teal); box-shadow:0 0 0 4px rgba(63,214,196,0.15);}
+  .dot-drop{background:var(--amber); box-shadow:0 0 0 4px rgba(242,169,59,0.15);}
+  .connector{
+    width:2px;
+    flex:1;
+    min-height:34px;
+    background:repeating-linear-gradient(to bottom, var(--line) 0 4px, transparent 4px 9px);
+    margin:4px 0;
+  }
+  .route-inputs{flex:1; display:flex; flex-direction:column; gap:16px;}
+  .field label{
+    display:block;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--muted);
+    margin-bottom:6px;
+  }
+  .field input{
+    width:100%;
+    background:transparent;
+    border:none;
+    border-bottom:1px solid var(--line);
+    color:var(--text);
+    font-size:15px;
+    font-family:system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    padding:4px 2px 8px;
+    outline:none;
+    transition:border-color .2s ease;
+  }
+  .field input::placeholder{color:#4c5670;}
+  .field input:focus{border-color:var(--amber);}
+
+  .swap-btn{
+    position:absolute;
+    right:0;
+    top:38%;
+    width:30px;height:30px;
+    border-radius:50%;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    color:var(--muted);
+    transition:transform .25s ease, color .2s ease, border-color .2s ease;
+  }
+  .swap-btn:hover{color:var(--amber); border-color:var(--amber); transform:rotate(180deg);}
+
+  /* ---- passenger / luggage counters ---- */
+  .counter-row{
+    display:flex; gap:12px; margin-bottom:20px;
+  }
+  .counter-field{
+    flex:1;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:12px 14px;
+  }
+  .counter-field label{
+    display:block;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--muted);
+    margin-bottom:8px;
+  }
+  .counter-controls{
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .counter-btn{
+    width:28px; height:28px;
+    border-radius:8px;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    color:var(--text);
+    font-size:16px;
+    line-height:1;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:border-color .2s ease, color .2s ease;
+  }
+  .counter-btn:hover{border-color:var(--teal); color:var(--teal);}
+  .counter-btn:active{transform:scale(0.94);}
+  .counter-val{font-weight:700; font-size:16px; min-width:20px; text-align:center;}
+
+  /* ---- AI ride assistant ---- */
+  .ai-suggest-card{
+    background:linear-gradient(135deg, rgba(47,143,224,0.14), rgba(255,138,61,0.08));
+    border:1px solid rgba(47,143,224,0.35);
+    border-radius:16px;
+    padding:14px 16px;
+    margin-bottom:16px;
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+  }
+  .ai-suggest-icon{font-size:20px; flex-shrink:0; line-height:1.3;}
+  .ai-suggest-title{font-weight:700; font-size:13px; color:var(--teal); margin-bottom:3px;}
+  .ai-suggest-text{font-size:12.5px; color:var(--muted); line-height:1.45;}
+  .ai-badge{
+    display:inline-flex; align-items:center; gap:4px;
+    font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;
+    color:#1a1206;
+    background:linear-gradient(135deg,#FFD98A,var(--amber) 70%);
+    padding:3px 8px;
+    border-radius:999px;
+    margin-top:5px;
+  }
+
+  .quick-tags{
+    display:flex; gap:8px; flex-wrap:wrap; margin-bottom:22px;
+  }
+  .quick-tags button{
+    background:var(--surface);
+    border:1px solid var(--line);
+    color:var(--muted);
+    font-size:12.5px;
+    padding:7px 12px;
+    border-radius:999px;
+    cursor:pointer;
+    font-family:system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    transition:all .2s ease;
+  }
+  .quick-tags button:hover{border-color:var(--teal); color:var(--teal);}
+
+  .btn-primary{
+    margin-top:auto;
+    background:linear-gradient(135deg, #FFDD97, var(--amber) 55%, #E1932F);
+    color:#1a1206;
+    border:none;
+    font-family:'Segoe UI', 'Trebuchet MS', system-ui, sans-serif;
+    font-weight:600;
+    font-size:15.5px;
+    padding:16px 20px;
+    border-radius:14px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    transition:transform .15s ease, box-shadow .15s ease, opacity .2s ease;
+    box-shadow:0 10px 24px rgba(242,169,59,0.28);
+  }
+  .btn-primary:hover:not(:disabled){
+    transform:translateY(-1px);
+    box-shadow:0 12px 28px rgba(242,169,59,0.36);
+  }
+  .btn-primary:disabled{
+    opacity:0.35;
+    cursor:not-allowed;
+    box-shadow:none;
+  }
+  .btn-primary:not(:disabled):active{transform:scale(0.98);}
+  .btn-primary svg{width:16px;height:16px;}
+
+  .btn-ghost{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--text);
+    font-family:system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    font-size:14px;
+    padding:12px 18px;
+    border-radius:12px;
+    cursor:pointer;
+    margin-top:12px;
+  }
+
+  /* ---- back link ---- */
+  .back-link{
+    display:flex; align-items:center; gap:6px;
+    color:var(--muted); font-size:13px;
+    background:none; border:none; cursor:pointer;
+    margin-bottom:14px; padding:0; width:fit-content;
+  }
+  .back-link:hover{color:var(--text);}
+  .back-link svg{width:14px;height:14px;}
+
+  /* ---- trip summary strip ---- */
+  .trip-strip{
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:12px 16px;
+    margin-bottom:18px;
+    font-size:13px;
+  }
+  .trip-strip .from-to{color:var(--text); font-weight:500;}
+  .trip-strip .meta{color:var(--muted); display:flex; gap:12px; margin-top:3px;}
+
+  /* ---- car options ---- */
+  .car-list{display:flex; flex-direction:column; gap:12px; margin-bottom:16px;}
+  .car-option{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    background:var(--surface);
+    border:1.5px solid var(--line);
+    border-radius:16px;
+    padding:14px 16px;
+    cursor:pointer;
+    transition:border-color .2s ease, background .2s ease;
+  }
+  .car-option:hover{border-color:#3a4460;}
+  .car-option.selected{
+    border-color:var(--amber);
+    background:linear-gradient(90deg, rgba(242,169,59,0.08), transparent);
+  }
+  .car-icon{
+    width:48px; height:48px;
+    border-radius:12px;
+    background:var(--surface-2);
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .car-icon svg{width:26px; height:26px; color:var(--teal);}
+  .car-option.selected .car-icon svg{color:var(--amber);}
+  .car-info{flex:1;}
+  .car-info .name{font-family:'Segoe UI', 'Trebuchet MS', system-ui, sans-serif; font-weight:600; font-size:15px;}
+  .car-info .sub{color:var(--muted); font-size:12px; margin-top:2px;}
+  .car-price{text-align:right;}
+  .car-price .amt{font-family:'Segoe UI', 'Trebuchet MS', system-ui, sans-serif; font-weight:700; font-size:16px;}
+  .car-price .eta{color:var(--muted); font-size:11px; margin-top:2px;}
+
+  .section-label{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--muted);
+    margin:4px 0 10px;
+  }
+  .payment-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-bottom:20px;
+  }
+  .payment-option{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:var(--surface);
+    border:1.5px solid var(--line);
+    border-radius:14px;
+    padding:12px 14px;
+    cursor:pointer;
+    color:var(--text);
+    font-size:13.5px;
+    font-family:system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    transition:border-color .2s ease, background .2s ease;
+  }
+  .payment-option:hover{border-color:#3a4460;}
+  .payment-option.selected{
+    border-color:var(--teal);
+    background:linear-gradient(90deg, rgba(63,214,196,0.10), transparent);
+  }
+  .payment-option .pay-icon{font-size:18px; flex-shrink:0;}
+  .payment-option .pay-name{flex:1;}
+  .payment-option .pay-check{
+    width:16px; height:16px;
+    border-radius:50%;
+    border:1.5px solid var(--line);
+    flex-shrink:0;
+  }
+  .payment-option.selected .pay-check{
+    border-color:var(--teal);
+    background:var(--teal);
+  }
+
+  .suggest-list{
+    position:absolute;
+    top:100%;
+    left:0;
+    right:0;
+    z-index:40;
+    margin-top:4px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:12px;
+    overflow:hidden;
+    display:none;
+    box-shadow:0 10px 30px rgba(0,0,0,0.35);
+  }
+  .suggest-list.visible{display:block;}
+  .suggest-item{
+    padding:10px 12px;
+    font-size:12.5px;
+    color:var(--text);
+    cursor:pointer;
+    border-bottom:1px solid var(--line);
+  }
+  .suggest-item:last-child{border-bottom:none;}
+  .suggest-item:hover, .suggest-item.active{background:rgba(63,214,196,0.10);}
+  .suggest-item .s-main{display:block; color:var(--text);}
+  .suggest-item .s-sub{display:block; color:var(--muted); font-size:11px; margin-top:1px;}
+  .suggest-empty{padding:10px 12px; font-size:12px; color:var(--muted);}
+
+  /* ---------- Confirm-ride sunny drive animation ---------- */
+  .ride-loading-overlay{
+    position:fixed;
+    inset:0;
+    z-index:999;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(180deg, #ffcf70 0%, #ffb84d 35%, #ff9d5c 65%, #f2814f 100%);
+    overflow:hidden;
+  }
+  .ride-loading-overlay.visible{
+    display:flex;
+    animation:overlayFadeIn .35s ease;
+  }
+  @keyframes overlayFadeIn{
+    from{opacity:0;}
+    to{opacity:1;}
+  }
+  .rlo-scene{
+    position:relative;
+    width:100%;
+    height:100%;
+    max-width:520px;
+  }
+  .rlo-sun{
+    position:absolute;
+    top:14%;
+    left:50%;
+    transform:translateX(-50%);
+    width:86px;
+    height:86px;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, #fff6d6, #ffd447 60%, #ffb020 100%);
+    box-shadow:0 0 60px 18px rgba(255,214,71,0.55);
+    animation:sunPulse 2.4s ease-in-out infinite;
+  }
+  @keyframes sunPulse{
+    0%,100%{ transform:translateX(-50%) scale(1); }
+    50%{ transform:translateX(-50%) scale(1.06); }
+  }
+  .rlo-cloud{
+    position:absolute;
+    background:rgba(255,255,255,0.75);
+    border-radius:50px;
+    filter:blur(0.3px);
+  }
+  .rlo-cloud::before, .rlo-cloud::after{
+    content:"";
+    position:absolute;
+    background:rgba(255,255,255,0.75);
+    border-radius:50%;
+  }
+  .rlo-cloud1{ width:70px; height:24px; top:22%; left:-20%; animation:cloudDrift 7s linear infinite; }
+  .rlo-cloud1::before{ width:34px; height:34px; top:-16px; left:8px; }
+  .rlo-cloud1::after{ width:26px; height:26px; top:-10px; left:36px; }
+  .rlo-cloud2{ width:54px; height:18px; top:34%; left:-25%; animation:cloudDrift 9.5s linear infinite; animation-delay:1.5s; }
+  .rlo-cloud2::before{ width:26px; height:26px; top:-12px; left:6px; }
+  .rlo-cloud2::after{ width:20px; height:20px; top:-8px; left:26px; }
+  @keyframes cloudDrift{
+    from{ transform:translateX(0); }
+    to{ transform:translateX(650px); }
+  }
+  .rlo-road{
+    position:absolute;
+    bottom:32%;
+    left:0;
+    width:100%;
+    height:10px;
+    background:#3a3550;
+    border-radius:6px;
+  }
+  .rlo-road::after{
+    content:"";
+    position:absolute;
+    top:50%;
+    left:0;
+    width:200%;
+    height:3px;
+    transform:translateY(-50%);
+    background-image:repeating-linear-gradient(90deg, #fff 0 20px, transparent 20px 40px);
+    animation:roadLines 0.9s linear infinite;
+  }
+  @keyframes roadLines{
+    from{ transform:translate(0,-50%); }
+    to{ transform:translate(-40px,-50%); }
+  }
+  .rlo-car{
+    position:absolute;
+    bottom:calc(32% + 8px);
+    left:-70px;
+    width:70px;
+    animation:carDrive 1.7s ease-in-out infinite;
+  }
+  @keyframes carDrive{
+    0%{ left:-70px; transform:rotate(0deg); }
+    45%{ transform:rotate(-1deg); }
+    50%{ left:calc(50% - 35px); transform:rotate(1deg); }
+    55%{ transform:rotate(-1deg); }
+    100%{ left:calc(100% + 70px); transform:rotate(0deg); }
+  }
+  .rlo-car svg{ width:100%; height:auto; display:block; filter:drop-shadow(0 6px 6px rgba(0,0,0,0.25)); }
+  .rlo-wheel{ animation:wheelSpin 0.4s linear infinite; transform-origin:center; }
+  @keyframes wheelSpin{
+    from{ transform:rotate(0deg); }
+    to{ transform:rotate(360deg); }
+  }
+  .rlo-text{
+    position:absolute;
+    bottom:14%;
+    left:0;
+    width:100%;
+    text-align:center;
+    color:#3a2a12;
+    font-family:'Segoe UI', 'Trebuchet MS', system-ui, sans-serif;
+    font-weight:700;
+    font-size:17px;
+    letter-spacing:0.02em;
+  }
+  .rlo-text .dots span{
+    animation:dotBlink 1.2s infinite;
+    opacity:0;
+  }
+  .rlo-text .dots span:nth-child(2){ animation-delay:0.2s; }
+  .rlo-text .dots span:nth-child(3){ animation-delay:0.4s; }
+  @keyframes dotBlink{
+    0%,100%{ opacity:0; }
+    50%{ opacity:1; }
+  }
+
+  /* ---- confirmation screen ---- */
+  .success-mark{
+    width:64px;height:64px;border-radius:50%;
+    background:rgba(63,214,196,0.12);
+    border:1px solid rgba(63,214,196,0.4);
+    display:flex;align-items:center;justify-content:center;
+    margin:6px auto 18px;
+  }
+  .success-mark svg{width:30px;height:30px;color:var(--teal);}
+  .confirm-title{text-align:center; font-family:'Segoe UI', 'Trebuchet MS', system-ui, sans-serif; font-weight:600; font-size:20px; margin-bottom:4px;}
+  .confirm-sub{text-align:center; color:var(--muted); font-size:13.5px; margin-bottom:22px;}
+
+  .driver-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:16px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:16px;
+  }
+  .driver-avatar{
+    width:52px;height:52px;border-radius:50%;
+    background:linear-gradient(140deg, var(--surface-2), #22304d);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Segoe UI', 'Trebuchet MS', system-ui, sans-serif; font-weight:700; font-size:18px;
+    color:var(--amber);
+    flex-shrink:0;
+  }
+  .driver-meta .dname{font-weight:600; font-size:15px;}
+  .driver-meta .dsub{color:var(--muted); font-size:12px; margin-top:2px;}
+  .otp-box{
+    margin-left:auto;
+    text-align:center;
+    background:var(--surface-2);
+    border-radius:10px;
+    padding:8px 12px;
+  }
+  .otp-box .lbl{font-size:9.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em;}
+  .otp-box .val{font-family:'Segoe UI', 'Trebuchet MS', system-ui, sans-serif; font-weight:700; font-size:17px; letter-spacing:0.1em; color:var(--amber);}
+
+  .fare-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:16px 18px;
+    margin-bottom:16px;
+  }
+  .fare-row{display:flex; justify-content:space-between; font-size:13.5px; padding:6px 0; color:var(--muted);}
+  .fare-row.total{
+    border-top:1px dashed var(--line);
+    margin-top:6px; padding-top:12px;
+    color:var(--text); font-weight:600; font-size:15px;
+  }
+
+  .plate{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    color:var(--muted); font-size:12.5px; margin-top:auto; padding-top:14px;
+  }
+  .plate b{color:var(--text); letter-spacing:0.05em;}
+
+  /* ---- AI safety monitoring panel ---- */
+  .safety-panel{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:16px 18px;
+    margin-bottom:16px;
+  }
+  .safety-header{
+    display:flex; align-items:center; gap:9px;
+    font-weight:600; font-size:14px;
+  }
+  .safety-dot{
+    width:9px; height:9px; border-radius:50%; flex-shrink:0;
+    background:var(--muted);
+  }
+  .safety-dot.ok{background:var(--teal); box-shadow:0 0 0 4px rgba(63,214,196,0.18); animation:safetyPulse 2s ease-in-out infinite;}
+  .safety-dot.alert{background:var(--danger); box-shadow:0 0 0 4px rgba(232,96,122,0.2); animation:safetyPulse 1s ease-in-out infinite;}
+  @keyframes safetyPulse{
+    0%,100%{opacity:1;}
+    50%{opacity:0.45;}
+  }
+  .safety-sub{color:var(--muted); font-size:12.5px; margin-top:6px; line-height:1.45;}
+  #alertContactBtn{
+    margin-top:12px;
+    width:100%;
+    border-color:var(--danger);
+    color:var(--danger);
+  }
+  #alertContactBtn:hover{background:rgba(232,96,122,0.08);}
+
+  /* ---- AI support chat widget ---- */
+  .ai-chat-fab{
+    position:fixed;
+    right:20px;
+    bottom:26px;
+    width:54px; height:54px;
+    border-radius:50%;
+    border:none;
+    background:linear-gradient(135deg, #FFD98A, var(--amber) 70%);
+    color:#1a1206;
+    font-size:22px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    box-shadow:0 10px 26px rgba(242,169,59,0.4);
+    z-index:500;
+    transition:transform .2s ease;
+  }
+  .ai-chat-fab:hover{transform:scale(1.06);}
+
+  .ai-chat-panel{
+    position:fixed;
+    right:20px;
+    bottom:92px;
+    width:320px;
+    max-width:88vw;
+    height:440px;
+    max-height:70vh;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:18px;
+    box-shadow:0 20px 50px rgba(0,0,0,0.45);
+    display:none;
+    flex-direction:column;
+    overflow:hidden;
+    z-index:600;
+  }
+  .ai-chat-panel.open{display:flex;}
+  .ai-chat-header{
+    display:flex; align-items:flex-start; justify-content:space-between;
+    padding:14px 16px;
+    background:var(--surface-2);
+    border-bottom:1px solid var(--line);
+    flex-shrink:0;
+  }
+  .ai-chat-title{font-weight:700; font-size:14px;}
+  .ai-chat-sub{font-size:11px; color:var(--muted); margin-top:2px;}
+  .ai-chat-close{background:none; border:none; color:var(--muted); font-size:16px; cursor:pointer; line-height:1;}
+  .ai-chat-close:hover{color:var(--text);}
+  .ai-chat-messages{
+    flex:1; overflow-y:auto; padding:14px 16px;
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .chat-msg{
+    max-width:85%;
+    padding:9px 12px;
+    border-radius:14px;
+    font-size:12.5px;
+    line-height:1.45;
+    white-space:pre-wrap;
+  }
+  .chat-msg.user{
+    align-self:flex-end;
+    background:linear-gradient(135deg, #FFD98A, var(--amber) 70%);
+    color:#1a1206;
+    border-bottom-right-radius:4px;
+  }
+  .chat-msg.bot{
+    align-self:flex-start;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    color:var(--text);
+    border-bottom-left-radius:4px;
+  }
+  .chat-msg.emergency{
+    align-self:flex-start;
+    background:rgba(232,96,122,0.14);
+    border:1px solid var(--danger);
+    color:var(--text);
+  }
+  .chat-msg.typing{color:var(--muted); font-style:italic;}
+  .ai-chat-input-row{
+    display:flex; gap:8px;
+    padding:12px 14px;
+    border-top:1px solid var(--line);
+    flex-shrink:0;
+  }
+  .ai-chat-input-row input{
+    flex:1;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:9px 12px;
+    color:var(--text);
+    font-size:12.5px;
+    outline:none;
+    font-family:system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  }
+  .ai-chat-input-row input:focus{border-color:var(--amber);}
+  .ai-chat-input-row button{
+    width:36px; height:36px;
+    border-radius:10px;
+    border:none;
+    background:linear-gradient(135deg, #FFD98A, var(--amber) 70%);
+    color:#1a1206;
+    cursor:pointer;
+    font-size:15px;
+    flex-shrink:0;
+  }
+  .ai-chat-emergency-hint{
+    font-size:10.5px;
+    color:var(--muted);
+    text-align:center;
+    padding:8px 10px 10px;
+    border-top:1px dashed var(--line);
+    flex-shrink:0;
+  }
+  .ai-chat-emergency-hint b{color:var(--danger);}
+
+  ::selection{background:rgba(242,169,59,0.3);}
+
+  /* ---- auth: login / signup ---- */
+  .auth-tabs{
+    display:flex;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:13px;
+    padding:4px;
+    margin-bottom:24px;
+    box-shadow:inset 0 1px 2px rgba(0,0,0,0.25);
+  }
+  .tab-btn{
+    flex:1;
+    background:transparent;
+    border:none;
+    color:var(--muted);
+    font-family:'Segoe UI', 'Trebuchet MS', system-ui, sans-serif;
+    font-weight:600;
+    font-size:13.5px;
+    padding:11px 8px;
+    border-radius:10px;
+    cursor:pointer;
+    transition:background .25s ease, color .25s ease, box-shadow .25s ease;
+  }
+  .tab-btn.active{
+    background:linear-gradient(135deg, #FFD98A, var(--amber) 70%);
+    color:#1a1206;
+    box-shadow:0 4px 14px rgba(242,169,59,0.35);
+  }
+  .auth-card{
+    background:linear-gradient(165deg, rgba(255,255,255,0.035), rgba(255,255,255,0) 55%), var(--surface);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:22px 20px;
+    margin-bottom:20px;
+    box-shadow:0 14px 34px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.03);
+  }
+  .auth-panel{display:none; flex-direction:column; gap:16px;}
+  .auth-panel.active{display:flex;}
+  .phone-field{
+    display:flex;
+    align-items:flex-end;
+    gap:10px;
+  }
+  .phone-field .code{
+    color:var(--muted);
+    font-size:15px;
+    padding-bottom:8px;
+    flex-shrink:0;
+  }
+  .phone-field .field{flex:1;}
+  .auth-hint{color:var(--muted); font-size:12px; margin-top:-6px;}
+
+  /* ---- OTP screen ---- */
+  .otp-target{
+    text-align:center;
+    color:var(--muted);
+    font-size:13.5px;
+    margin-bottom:22px;
+  }
+  .otp-target b{color:var(--text);}
+  .otp-digits{
+    display:flex;
+    justify-content:center;
+    gap:12px;
+    margin-bottom:14px;
+  }
+  .otp-digit{
+    width:52px;
+    height:58px;
+    text-align:center;
+    font-family:'Segoe UI', 'Trebuchet MS', system-ui, sans-serif;
+    font-size:22px;
+    font-weight:700;
+    color:var(--text);
+    background:var(--surface);
+    border:1.5px solid var(--line);
+    border-radius:12px;
+    outline:none;
+    transition:border-color .2s ease;
+  }
+  .otp-digit:focus{border-color:var(--amber);}
+  .otp-digit.error{border-color:var(--danger);}
+  .otp-demo-hint{
+    text-align:center;
+    background:var(--surface-2);
+    border:1px dashed var(--line);
+    border-radius:10px;
+    padding:8px 12px;
+    font-size:12px;
+    color:var(--muted);
+    margin-bottom:20px;
+  }
+  .otp-demo-hint b{color:var(--amber); letter-spacing:0.1em;}
+  .otp-error-msg{
+    text-align:center;
+    color:var(--danger);
+    font-size:12.5px;
+    margin:-10px 0 14px;
+    min-height:16px;
+  }
+  .resend-row{
+    text-align:center;
+    font-size:13px;
+    color:var(--muted);
+    margin-bottom:auto;
+  }
+  .resend-row button{
+    background:none; border:none;
+    color:var(--teal);
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+    padding:0;
+  }
+  .resend-row button:disabled{color:var(--muted); cursor:default;}
+
+  @media (prefers-reduced-motion: reduce){
+    .screen, .swap-btn, .btn-primary{transition:none !important;}
+  }
+
+  @media (max-width:480px){
+    .app{max-width:100%;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">
+        <img src="logo-icon.png" alt="go_travels logo">
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">go_travels</span>
+        <span class="brand-tagline">Your Trusted Luxury Travel Partner</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="step-dots">
+        <span class="dot" data-step="1"></span>
+        <span class="dot" data-step="2"></span>
+        <span class="dot" data-step="3"></span>
+        <span class="dot" data-step="4"></span>
+        <span class="dot" data-step="5"></span>
+      </div>
+      <button class="logout-btn" id="logoutBtn" title="Log out" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- SCREEN 0a: Login / Sign up -->
+    <section class="screen" id="screen-login">
+      <img src="logo-full.png" alt="go_travels" class="hero-logo">
+      <p class="hero-tagline">Your Trusted Luxury Travel Partner</p>
+      <h1 class="page-title">Welcome to<br><span class="grad-text">Go Travels</span></h1>
+      <p class="page-sub">Log in or create an account to book your ride.</p>
+
+      <div class="auth-tabs">
+        <button type="button" class="tab-btn active" id="tabExisting">I have an account</button>
+        <button type="button" class="tab-btn" id="tabNew">New here</button>
+      </div>
+
+      <div class="auth-card">
+        <!-- Existing user: phone + OTP only -->
+        <div class="auth-panel active" id="panelExisting">
+          <div class="field phone-field">
+            <span class="code">+91</span>
+            <div class="field">
+              <label>Mobile number</label>
+              <input type="tel" id="existingPhone" placeholder="10-digit mobile number" inputmode="numeric" maxlength="10">
+            </div>
+          </div>
+          <p class="auth-hint">Enter the mobile number</p>
+        </div>
+
+        <!-- New user: name + phone -->
+        <div class="auth-panel" id="panelNew">
+          <div class="field">
+            <label>Full name</label>
+            <input type="text" id="newName" placeholder="e.g. Arnav Sharma">
+          </div>
+          <div class="field phone-field">
+            <span class="code">+91</span>
+            <div class="field">
+              <label>Mobile number</label>
+              <input type="tel" id="newPhone" placeholder="10-digit mobile number" inputmode="numeric" maxlength="10">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-primary" id="sendOtpBtn" disabled>
+        Send OTP
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </section>
+
+    <!-- SCREEN 0b: OTP verification -->
+    <section class="screen" id="screen-otp">
+      <button class="back-link" id="backToLogin">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        Change number
+      </button>
+
+      <h1 class="page-title">Verify your number</h1>
+      <p class="otp-target">Enter the 4-digit code sent to <b id="otpTargetPhone">+91 XXXXXXXXXX</b></p>
+
+      <div class="otp-digits">
+        <input class="otp-digit" id="otp0" maxlength="1" inputmode="numeric" type="tel">
+        <input class="otp-digit" id="otp1" maxlength="1" inputmode="numeric" type="tel">
+        <input class="otp-digit" id="otp2" maxlength="1" inputmode="numeric" type="tel">
+        <input class="otp-digit" id="otp3" maxlength="1" inputmode="numeric" type="tel">
+      </div>
+      <div class="otp-error-msg" id="otpErrorMsg"></div>
+
+      <div class="otp-demo-hint">This is a demo — no real SMS is sent. Your test code is <b id="demoOtpValue">----</b></div>
+
+      <div class="resend-row">
+        Didn't get it? <button type="button" id="resendOtpBtn">Resend code</button>
+      </div>
+
+      <button class="btn-primary" id="verifyOtpBtn" disabled>
+        Verify &amp; continue
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </section>
+
+    <!-- SCREEN 1: Pickup & Drop -->
+    <section class="screen" id="screen-1">
+      <p class="auth-hint" id="userGreeting" style="margin-bottom:14px;"></p>
+      <h1 class="page-title">Where's the ride<br>taking you?</h1>
+      <p class="page-sub">Enter pickup, drop, passengers &amp; luggage — our AI assistant will pick the most affordable ride that fits.</p>
+
+      <div class="traffic-badge" id="trafficBadge" style="display:none;">
+        <span class="tb-dot" id="tbDot"></span>
+        <span id="tbText">Loading live conditions…</span>
+      </div>
+
+      <div class="nl-command-card">
+        <label for="nlCommand">Or just tell the AI what you need</label>
+        <div class="nl-command-row">
+          <input type="text" id="nlCommand" placeholder='e.g. "Book a cab from VIT Chennai to Chennai Airport tomorrow at 6pm, 2 bags"'>
+          <button type="button" id="micBtn" title="Speak your request">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          </button>
+          <button type="button" id="nlCommandBtn" title="Fill from command">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+          </button>
+        </div>
+        <p class="nl-command-status" id="nlCommandStatus"></p>
+      </div>
+
+      <div class="route-card">
+        <div class="route-row">
+          <div class="route-track">
+            <div class="dot-pickup"></div>
+            <div class="connector"></div>
+            <div class="dot-drop"></div>
+          </div>
+          <div class="route-inputs">
+            <div class="field" style="position:relative;">
+              <label>Pickup point</label>
+              <input type="text" id="pickup" placeholder="e.g. VIT Chennai, Vandalur" autocomplete="off">
+              <div class="suggest-list" id="pickupSuggest"></div>
+            </div>
+            <div class="field" style="position:relative;">
+              <label>Drop point</label>
+              <input type="text" id="drop" placeholder="e.g. Chennai Central Station" autocomplete="off">
+              <div class="suggest-list" id="dropSuggest"></div>
+            </div>
+          </div>
+        </div>
+        <div class="swap-btn" id="swapBtn" title="Swap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 8h13M7 8l4-4M7 8l4 4M17 16H4M17 16l-4-4M17 16l-4 4"/></svg>
+        </div>
+      </div>
+
+      <div id="routeMap"></div>
+      <p class="map-status" id="mapStatus"></p>
+
+      <div class="counter-row">
+        <div class="counter-field">
+          <label>Passengers</label>
+          <div class="counter-controls">
+            <button type="button" class="counter-btn" data-counter="members" data-dir="-1">−</button>
+            <span class="counter-val" id="membersVal">1</span>
+            <button type="button" class="counter-btn" data-counter="members" data-dir="1">+</button>
+          </div>
+        </div>
+        <div class="counter-field">
+          <label>Luggage bags</label>
+          <div class="counter-controls">
+            <button type="button" class="counter-btn" data-counter="luggage" data-dir="-1">−</button>
+            <span class="counter-val" id="luggageVal">0</span>
+            <button type="button" class="counter-btn" data-counter="luggage" data-dir="1">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="quick-tags">
+        <button type="button" data-fill-pickup="Home">📍 Home</button>
+        <button type="button" data-fill-pickup="VIT Chennai Campus">🎓 Campus</button>
+        <button type="button" data-fill-drop="Chennai Airport">✈️ Airport</button>
+        <button type="button" data-fill-drop="Chennai Central">🚉 Railway Station</button>
+      </div>
+
+      <button class="btn-primary" id="toStep2" disabled>
+        See ride options
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </section>
+
+    <!-- SCREEN 2: Choose car type -->
+    <section class="screen" id="screen-2">
+      <button class="back-link" id="backTo1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        Edit locations
+      </button>
+
+      <h1 class="page-title">Choose your ride</h1>
+      <p class="page-sub" id="distanceLine">Calculating distance…</p>
+
+      <div class="trip-strip">
+        <div>
+          <div class="from-to" id="tripFromTo">— to —</div>
+          <div class="meta">
+            <span id="tripDist">— km</span>
+            <span id="tripEta">— mins</span>
+          </div>
+        </div>
+        <div class="dot-drop" style="width:8px;height:8px;"></div>
+      </div>
+
+      <div class="ai-suggest-card" id="demandCard" style="display:none;">
+        <div class="ai-suggest-icon">📈</div>
+        <div>
+          <div class="ai-suggest-title">Demand &amp; Pricing Agent</div>
+          <div class="ai-suggest-text" id="demandText"></div>
+        </div>
+      </div>
+
+      <div class="ai-suggest-card" id="aiSuggestCard" style="display:none;">
+        <div class="ai-suggest-icon">🤖</div>
+        <div>
+          <div class="ai-suggest-title">AI Ride Assistant</div>
+          <div class="ai-suggest-text" id="aiSuggestText"></div>
+        </div>
+      </div>
+
+      <div class="car-list" id="carList"><!-- populated by JS --></div>
+
+      <p class="section-label">Payment method</p>
+      <div class="payment-grid" id="paymentGrid">
+        <button type="button" class="payment-option" data-payment="upi">
+          <span class="pay-icon">📱</span><span class="pay-name">UPI</span><span class="pay-check"></span>
+        </button>
+        <button type="button" class="payment-option" data-payment="card">
+          <span class="pay-icon">💳</span><span class="pay-name">Card</span><span class="pay-check"></span>
+        </button>
+        <button type="button" class="payment-option" data-payment="cash">
+          <span class="pay-icon">💵</span><span class="pay-name">Cash</span><span class="pay-check"></span>
+        </button>
+        <button type="button" class="payment-option" data-payment="debit">
+          <span class="pay-icon">💳</span><span class="pay-name">Debit Card</span><span class="pay-check"></span>
+        </button>
+        <button type="button" class="payment-option" data-payment="credit">
+          <span class="pay-icon">💳</span><span class="pay-name">Credit Card</span><span class="pay-check"></span>
+        </button>
+        <button type="button" class="payment-option" data-payment="points">
+          <span class="pay-icon">⭐</span><span class="pay-name">Travel Points</span><span class="pay-check"></span>
+        </button>
+      </div>
+
+      <button class="btn-primary" id="toStep3" disabled>
+        Confirm ride
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </section>
+
+    <!-- SCREEN 3: Confirmation -->
+    <section class="screen" id="screen-3">
+      <div class="success-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+      </div>
+      <div class="confirm-title">Ride booked!</div>
+      <div class="confirm-sub" id="confirmSub">Your driver is on the way.</div>
+
+      <div class="driver-card">
+        <div class="driver-avatar" id="driverInitial">R</div>
+        <div class="driver-meta">
+          <div class="dname" id="driverName">—</div>
+          <div class="dsub" id="driverCar">—</div>
+        </div>
+        <div class="otp-box">
+          <div class="lbl">OTP</div>
+          <div class="val" id="otpVal">----</div>
+        </div>
+      </div>
+
+      <div class="ai-suggest-card" id="driverAiCard" style="display:none;">
+        <div class="ai-suggest-icon">🚦</div>
+        <div>
+          <div class="ai-suggest-title">AI Dispatch Agent</div>
+          <div class="ai-suggest-text" id="driverAiText">Analyzing nearby drivers…</div>
+        </div>
+      </div>
+
+      <div class="safety-panel" id="safetyPanel">
+        <div class="safety-header">
+          <span class="safety-dot" id="safetyDot"></span>
+          <span id="safetyStatusText">Live trip monitoring active</span>
+        </div>
+        <p class="safety-sub" id="safetySub">AI is comparing your driver's live location to the planned route.</p>
+        <button type="button" class="btn-ghost" id="alertContactBtn" style="display:none;">🚨 Alert emergency contact</button>
+      </div>
+
+      <div class="fare-card">
+        <div class="fare-row"><span id="fareCarName">Car type</span><span id="fareDist">— km</span></div>
+        <div class="fare-row"><span>Base fare</span><span id="fareBase">₹0</span></div>
+        <div class="fare-row"><span>Distance charge</span><span id="fareDistCharge">₹0</span></div>
+        <div class="fare-row" id="fareAiRow" style="display:none;"><span id="fareAiLabel">AI adjustment</span><span id="fareAiVal">—</span></div>
+        <div class="fare-row"><span>Paid via</span><span id="farePayment">—</span></div>
+        <div class="fare-row total"><span>Total fare</span><span id="fareTotal">₹0</span></div>
+      </div>
+
+      <button class="btn-ghost" id="bookAnother">Book another ride</button>
+
+      <div class="plate">Vehicle no. <b id="plateNo">TN 09 XX 0000</b></div>
+    </section>
+
+  </main>
+</div>
+
+<div class="ride-loading-overlay" id="rideLoadingOverlay">
+  <div class="rlo-scene">
+    <div class="rlo-sun"></div>
+    <div class="rlo-cloud rlo-cloud1"></div>
+    <div class="rlo-cloud rlo-cloud2"></div>
+    <div class="rlo-road"></div>
+    <div class="rlo-car">
+      <svg viewBox="0 0 200 90" xmlns="http://www.w3.org/2000/svg">
+        <path d="M14 62 Q14 40 34 36 L58 36 Q68 20 88 20 L128 20 Q146 20 154 36 L172 36 Q188 38 188 56 L188 62 Z"
+              fill="#F2A93B" stroke="#c9822a" stroke-width="2"/>
+        <path d="M66 36 L78 22 L120 22 L134 36 Z" fill="#bfe9ff" stroke="#c9822a" stroke-width="1.5"/>
+        <circle class="rlo-wheel" cx="50" cy="64" r="14" fill="#26232e"/>
+        <circle cx="50" cy="64" r="5.5" fill="#cfcfd6"/>
+        <circle class="rlo-wheel" cx="150" cy="64" r="14" fill="#26232e"/>
+        <circle cx="150" cy="64" r="5.5" fill="#cfcfd6"/>
+        <circle cx="182" cy="46" r="4" fill="#fff6d6"/>
+        <circle cx="16" cy="50" r="3" fill="#ff5c5c"/>
+      </svg>
+    </div>
+    <div class="rlo-text">Confirming your ride<span class="dots"><span>.</span><span>.</span><span>.</span></span></div>
+  </div>
+</div>
+
+<!-- AI support chat widget -->
+<button type="button" class="ai-chat-fab" id="aiChatFab" title="Ask AI support" aria-label="Ask AI support">🤖</button>
+
+<div class="ai-chat-panel" id="aiChatPanel">
+  <div class="ai-chat-header">
+    <div>
+      <div class="ai-chat-title">go_travels AI Support</div>
+      <div class="ai-chat-sub">Ask about bookings, fares, safety</div>
+    </div>
+    <button type="button" class="ai-chat-close" id="aiChatClose" aria-label="Close chat">✕</button>
+  </div>
+  <div class="ai-chat-messages" id="aiChatMessages"></div>
+  <div class="ai-chat-input-row">
+    <input type="text" id="aiChatInput" placeholder="Type your question…" autocomplete="off">
+    <button type="button" id="aiChatSend" aria-label="Send">➤</button>
+  </div>
+  <div class="ai-chat-emergency-hint">🚨 Emergency? Call <b>112</b> (National) or <b>100</b> (Police) anytime.</div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  // ---------- state ----------
+var state = {
+  pickup: "",
+  drop: "",
+  distanceKm: 0,
+  etaMins: 0,
+  members: 1,
+  luggage: 0,
+  selectedCar: null,
+  paymentMethod: null
+};
+
+  var authState = {
+    mode: "existing",   // "existing" | "new"
+    name: "",
+    phone: "",
+    demoOtp: ""
+  };
+
+  var CAR_TYPES = [
+    {
+      id: "mini",
+      name: "Mini",
+      sub: "Compact • 4 seats",
+      base: 40,
+      perKm: 8,
+      speedKmh: 22,
+      seats: 4,
+      luggage: 2,
+      icon: '<path d="M4 15l1.4-4.8A2 2 0 0 1 7.3 9h9.4a2 2 0 0 1 1.9 1.2L20 15" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7.5" cy="16" r="1.5" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="16.5" cy="16" r="1.5" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M4 15h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>'
+    },
+    {
+      id: "sedan",
+      name: "Sedan",
+      sub: "Comfort • 4 seats",
+      base: 60,
+      perKm: 11,
+      speedKmh: 25,
+      seats: 4,
+      luggage: 3,
+      icon: '<path d="M3 15l1.2-4.5A2.4 2.4 0 0 1 6.5 9h11a2.4 2.4 0 0 1 2.3 1.5L21 15" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 9l1.6-3.2A2 2 0 0 1 9.4 5h5.2a2 2 0 0 1 1.8 1.1L18 9" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7" cy="16" r="1.5" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="17" cy="16" r="1.5" stroke="currentColor" stroke-width="1.8" fill="none"/>'
+    },
+    {
+      id: "suv",
+      name: "SUV",
+      sub: "Spacious • 6 seats",
+      base: 80,
+      perKm: 14,
+      speedKmh: 24,
+      seats: 6,
+      luggage: 5,
+      icon: '<path d="M2.5 15.5l1.3-5.5A2.3 2.3 0 0 1 6 8.2h12a2.3 2.3 0 0 1 2.2 1.7l1.3 5.6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 8.2l1.3-2.6A2 2 0 0 1 8.6 4.5h6.8a2 2 0 0 1 1.8 1.1l1.3 2.6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.8" cy="16.2" r="1.6" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="17.2" cy="16.2" r="1.6" stroke="currentColor" stroke-width="1.8" fill="none"/>'
+    },
+    {
+      id: "primesuv",
+      name: "Prime SUV",
+      sub: "Premium • 6 seats • top-rated drivers",
+      base: 120,
+      perKm: 18,
+      speedKmh: 24,
+      seats: 6,
+      luggage: 5,
+      icon: '<path d="M2.5 15.5l1.3-5.5A2.3 2.3 0 0 1 6 8.2h12a2.3 2.3 0 0 1 2.2 1.7l1.3 5.6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 8.2l1.3-2.6A2 2 0 0 1 8.6 4.5h6.8a2 2 0 0 1 1.8 1.1l1.3 2.6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.8" cy="16.2" r="1.6" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="17.2" cy="16.2" r="1.6" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M12 2.4l.6 1.3 1.4.2-1 1 .25 1.4L12 4.6l-1.25.7.25-1.4-1-1 1.4-.2z" fill="currentColor"/>'
+    }
+  ];
+
+  // ---------- Agentic layer: driver reliability + demand prediction ----------
+  // Small mock driver pool. baseCancelRate is a stand-in for "this driver's
+  // historical cancellation rate" — in a real system this would come from a
+  // database of past trips.
+  var DRIVER_POOL = [
+    { name:"Suresh Kumar", rating:4.8, baseCancelRate:0.04, vehicles:["mini","sedan"] },
+    { name:"Arjun Nair",   rating:4.6, baseCancelRate:0.07, vehicles:["sedan","suv"] },
+    { name:"Vignesh R",    rating:4.9, baseCancelRate:0.02, vehicles:["mini","sedan","suv"] },
+    { name:"Karthik S",    rating:4.3, baseCancelRate:0.12, vehicles:["suv","primesuv"] },
+    { name:"Manoj T",      rating:4.7, baseCancelRate:0.05, vehicles:["primesuv","suv"] },
+    { name:"Praveen M",    rating:4.4, baseCancelRate:0.09, vehicles:["mini","sedan"] },
+    { name:"Sathish V",    rating:4.85,baseCancelRate:0.03, vehicles:["sedan","suv"] },
+    { name:"Dinesh K",     rating:4.2, baseCancelRate:0.15, vehicles:["mini"] }
+  ];
+
+  // Predicts a 2-95% cancellation risk score for a driver+trip combination.
+  // Factors mirror the real-world causes from the "why drivers cancel" table:
+  // very short/very long trips, cash payments, and high-demand windows all
+  // correlate with higher cancellation rates.
+  function predictCancellationRisk(driver, context){
+    var risk = driver.baseCancelRate * 100;
+    if(context.distanceKm < 2) risk += 6;
+    if(context.distanceKm > 20) risk += 8;
+    if(context.paymentMethod === "cash") risk += 5;
+    if(context.demandLevel === "High") risk += 7;
+    return Math.max(2, Math.min(95, Math.round(risk)));
+  }
+
+  // Scores every driver who services the chosen vehicle type and assigns the
+  // one with the lowest predicted cancellation risk (ties broken by rating).
+  function assignReliableDriver(vehicleId, context){
+    var pool = DRIVER_POOL.filter(function(d){ return d.vehicles.indexOf(vehicleId) !== -1; });
+    if(!pool.length) pool = DRIVER_POOL.slice();
+    var scored = pool.map(function(d){
+      var risk = predictCancellationRisk(d, context);
+      return { driver:d, risk:risk, reliability: 100 - risk };
+    });
+    scored.sort(function(a, b){
+      if(b.reliability !== a.reliability) return b.reliability - a.reliability;
+      return b.driver.rating - a.driver.rating;
+    });
+    return scored[0];
+  }
+
+  // Classifies current demand as Low/Medium/High from time-of-day (rush
+  // hours), with a touch of area-based variety so the demo doesn't always
+  // look identical for every pickup point.
+  function predictDemand(pickupText){
+    var hour = new Date().getHours();
+    var level = "Low";
+    if((hour >= 7 && hour <= 10) || (hour >= 17 && hour <= 21)) level = "High";
+    else if((hour >= 11 && hour <= 16) || hour >= 22 || hour <= 1) level = "Medium";
+
+    var h = hashString((pickupText || "").trim().toLowerCase());
+    if(level === "Low" && h % 5 === 0) level = "Medium";
+
+    var surgeMap = { Low: 1.0, Medium: 1.15, High: 1.4 };
+    var waitSavedMap = { Low: 0, Medium: 1, High: 3 };
+    return { level: level, surge: surgeMap[level], waitSavedMins: waitSavedMap[level] };
+  }
+
+  // Sends the already-computed heuristic scores to the backend agent
+  // endpoint, which asks a free Groq LLM to turn them into a short
+  // explanation. If it fails (offline, no key set) the heuristic fallback
+  // text already shown in targetEl is simply left in place.
+  async function fetchAgentExplanation(task, context, targetEl){
+    try{
+      var res = await fetch("/api/agent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ task: task, context: context })
+      });
+      var data = await res.json();
+      if(data && data.explanation) targetEl.textContent = data.explanation;
+    }catch(err){
+      // keep the heuristic fallback text already on screen
+    }
+  }
+
+  // deterministic pseudo distance from pickup+drop text so the same pair always gives the same number
+  function hashString(str){
+    var h = 0;
+    for(var i=0;i<str.length;i++){
+      h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
+    }
+    return Math.abs(h);
+  }
+
+  function computeDistance(pickup, drop){
+    // last-resort fallback only — used when we don't even have coordinates
+    // for one of the two points (geocoding itself failed)
+    var h = hashString(pickup.trim().toLowerCase() + "|" + drop.trim().toLowerCase());
+    var km = 2.5 + (h % 2550) / 100;
+    return Math.round(km * 10) / 10;
+  }
+
+  // Straight-line ("as the crow flies") distance between two lat/lng points,
+  // in km. Used as a much more accurate fallback than a random guess when we
+  // have real coordinates but the road-routing service is unavailable.
+  function haversineKm(a, b){
+    var R = 6371;
+    var dLat = (b.lat - a.lat) * Math.PI / 180;
+    var dLng = (b.lng - a.lng) * Math.PI / 180;
+    var lat1 = a.lat * Math.PI / 180;
+    var lat2 = b.lat * Math.PI / 180;
+    var h = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    var c = 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+    return R * c;
+  }
+
+  // ---------- Live map + real distance (Leaflet + OSM Nominatim + OSRM) ----------
+  var routeMapEl = document.getElementById("routeMap");
+  var mapStatusEl = document.getElementById("mapStatus");
+  var leafletMap = null;
+  var routeLine = null;
+  var pickupMarker = null;
+  var dropMarker = null;
+
+  function ensureMapInit(){
+    if(leafletMap) return;
+    leafletMap = L.map("routeMap", { zoomControl:false, attributionControl:false });
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(leafletMap);
+    leafletMap.setView([13.0827, 80.2707], 11); // default: Chennai
+  }
+
+  async function geocodePlace(query){
+    // Bias results to India, and to the Chennai area specifically (viewbox),
+    // so a vague name like "Anna Nagar" doesn't match a place in another
+    // state/country. bounded=1 forces results to stay inside that box when
+    // possible; addressdetails helps us show what was actually matched.
+    var chennaiBox = "79.6,13.35,80.5,12.6"; // left,top,right,bottom around Chennai
+    var url = "https://nominatim.openstreetmap.org/search" +
+      "?format=json&limit=1&addressdetails=1" +
+      "&countrycodes=in" +
+      "&viewbox=" + chennaiBox + "&bounded=1" +
+      "&q=" + encodeURIComponent(query);
+    var res = await fetch(url);
+    var data = await res.json();
+    if(!data || !data.length){
+      // fall back to an unbounded India-wide search in case the place
+      // genuinely isn't near Chennai (e.g. user typed a different city)
+      var url2 = "https://nominatim.openstreetmap.org/search?format=json&limit=1&addressdetails=1&countrycodes=in&q=" + encodeURIComponent(query);
+      var res2 = await fetch(url2);
+      data = await res2.json();
+      if(!data || !data.length) return null;
+    }
+    return {
+      lat: parseFloat(data[0].lat),
+      lng: parseFloat(data[0].lon),
+      matchedName: data[0].display_name
+    };
+  }
+
+  async function fetchRoute(pickupPoint, dropPoint){
+    // Goes through our own backend, which uses OpenRouteService (with your
+    // API key kept server-side) and falls back to the free OSRM demo server
+    // if no key is configured — same result shape either way.
+    var res = await fetch("/api/route", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        pickupLat: pickupPoint.lat, pickupLng: pickupPoint.lng,
+        dropLat: dropPoint.lat, dropLng: dropPoint.lng
+      })
+    });
+    if(!res.ok) return null;
+    var data = await res.json();
+    if(!data.coords) return null;
+    return { distanceKm: data.distanceKm, coords: data.coords };
+  }
+
+  function drawMapMarkers(pickupPoint, dropPoint, pathCoords){
+    ensureMapInit();
+    routeMapEl.classList.add("visible");
+    leafletMap.invalidateSize();
+
+    if(routeLine) leafletMap.removeLayer(routeLine);
+    if(pickupMarker) leafletMap.removeLayer(pickupMarker);
+    if(dropMarker) leafletMap.removeLayer(dropMarker);
+
+    var coords = pathCoords || [[pickupPoint.lat, pickupPoint.lng], [dropPoint.lat, dropPoint.lng]];
+    routeLine = L.polyline(coords, {
+      color: "#F2A93B",
+      weight: pathCoords ? 4 : 3,
+      dashArray: pathCoords ? null : "6 8" // dashed = approximate straight-line, solid = real road route
+    }).addTo(leafletMap);
+    pickupMarker = L.circleMarker([pickupPoint.lat, pickupPoint.lng], { radius:6, color:"#3FD6C4", fillColor:"#3FD6C4", fillOpacity:1 })
+      .addTo(leafletMap).bindPopup("Pickup: " + pickupPoint.matchedName);
+    dropMarker = L.circleMarker([dropPoint.lat, dropPoint.lng], { radius:6, color:"#F2A93B", fillColor:"#F2A93B", fillOpacity:1 })
+      .addTo(leafletMap).bindPopup("Drop: " + dropPoint.matchedName);
+    leafletMap.fitBounds(routeLine.getBounds(), { padding:[18,18] });
+  }
+
+  // Looks up real coordinates + a real driving distance for the pickup/drop text.
+  // Falls back to the pseudo-random distance if the location can't be found or the
+  // network call fails (e.g. offline), so the app never gets stuck.
+  async function computeRealDistanceAndDrawMap(pickup, drop, resolvedPickup, resolvedDrop){
+    mapStatusEl.textContent = "Locating pickup & drop points…";
+    try{
+      // If the user picked an exact suggestion for a field, use those precise
+      // coordinates directly instead of re-searching from the typed text —
+      // this is the main fix for pickup/drop landing in the wrong spot.
+      var pickupPoint = resolvedPickup || await geocodePlace(pickup);
+      var dropPoint = resolvedDrop || await geocodePlace(drop);
+      if(!pickupPoint || !dropPoint){
+        mapStatusEl.textContent = "Couldn't find one of those places — showing an estimate instead.";
+        return computeDistance(pickup, drop);
+      }
+      state.pickupCoords = { lat: pickupPoint.lat, lng: pickupPoint.lng };
+
+      mapStatusEl.textContent = "Calculating route…";
+      var route = await fetchRoute(pickupPoint, dropPoint);
+      if(!route){
+        // Road-routing service is unavailable (it's a shared free demo
+        // server and does go down/rate-limit) — but we DO have real
+        // coordinates from geocoding, so use straight-line distance scaled
+        // up by a typical road-vs-straight-line factor instead of a random
+        // guess. This is what previously caused wildly wrong distances.
+        var straightKm = haversineKm(pickupPoint, dropPoint);
+        var approxKm = Math.round(straightKm * 1.3 * 10) / 10;
+        drawMapMarkers(pickupPoint, dropPoint, null);
+        var shortP = pickupPoint.matchedName.split(",").slice(0,2).join(",");
+        var shortD = dropPoint.matchedName.split(",").slice(0,2).join(",");
+        mapStatusEl.textContent =
+          "~" + approxKm + " km (approx., live routing unavailable)  •  matched: " + shortP + " → " + shortD;
+        return approxKm;
+      }
+
+      drawMapMarkers(pickupPoint, dropPoint, route.coords);
+
+      // Show a short version of what was actually matched, so a wrong pick
+      // (e.g. a same-named place in another area) is obvious immediately.
+      var shortPickup = pickupPoint.matchedName.split(",").slice(0,2).join(",");
+      var shortDrop = dropPoint.matchedName.split(",").slice(0,2).join(",");
+      mapStatusEl.textContent =
+        route.distanceKm + " km by road  •  matched: " + shortPickup + " → " + shortDrop;
+      return route.distanceKm;
+    }catch(err){
+      mapStatusEl.textContent = "Map lookup failed — showing an estimate instead.";
+      return computeDistance(pickup, drop);
+    }
+  }
+
+  function fmtRupee(n){
+    return "₹" + Math.round(n).toLocaleString("en-IN");
+  }
+
+  // ---------- AI ride assistant ----------
+  // A small rules-based agent: given how many people and bags are travelling,
+  // it filters to cars that can actually fit everyone, then recommends the
+  // cheapest one among those that fit. If nobody fits, it recommends the
+  // single most spacious option instead and flags that clearly.
+  // Requires each car's ._price to already be set (buildCarList sets this
+  // before calling in).
+  function getAIRecommendation(members, luggage){
+    var fitting = CAR_TYPES.filter(function(c){
+      return c.seats >= members && c.luggage >= luggage;
+    });
+
+    if(fitting.length){
+      var cheapest = fitting.slice().sort(function(a, b){ return a._price - b._price; })[0];
+      return { car: cheapest, fits: true };
+    }
+
+    // Nothing fits everyone comfortably — suggest the roomiest car instead.
+    var roomiest = CAR_TYPES.slice().sort(function(a, b){
+      return (b.seats + b.luggage) - (a.seats + a.luggage);
+    })[0];
+    return { car: roomiest, fits: false };
+  }
+
+  // ---------- screen transitions ----------
+  var screens = document.querySelectorAll(".screen");
+  var dots = document.querySelectorAll(".step-dots .dot");
+  var logoutBtn = document.getElementById("logoutBtn");
+
+  function goToScreen(n){
+    screens.forEach(function(s, idx){
+      s.classList.remove("active", "leaving");
+      if(idx === n-1){
+        s.classList.add("active");
+      }
+    });
+    dots.forEach(function(d, idx){
+      d.classList.toggle("active", idx === n-1);
+    });
+    logoutBtn.style.display = (n >= 3) ? "flex" : "none";
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+  goToScreen(1); // login screen first
+
+  // ---------- Live traffic/demand badge (simulation) ----------
+  (async function loadTrafficBadge(){
+    var badge = document.getElementById("trafficBadge");
+    var dot = document.getElementById("tbDot");
+    var text = document.getElementById("tbText");
+    try{
+      var res = await fetch("/api/traffic-status");
+      var data = await res.json();
+      var worseLabel = (data.trafficLabel === "High" || data.demandLabel === "High") ? "high"
+        : (data.trafficLabel === "Moderate" || data.demandLabel === "Moderate") ? "moderate" : "low";
+      dot.className = "tb-dot " + worseLabel;
+      text.textContent = "Live: " + data.trafficLabel + " traffic, " + data.demandLabel + " demand across Chennai" +
+        (data.raining ? " · rain in some areas" : "");
+      badge.style.display = "flex";
+    }catch(err){
+      badge.style.display = "none"; // no backend reachable — hide rather than show a stuck loading message
+    }
+  })();
+
+  // ---------- Auth: login / signup ----------
+  var tabExisting = document.getElementById("tabExisting");
+  var tabNew = document.getElementById("tabNew");
+  var panelExisting = document.getElementById("panelExisting");
+  var panelNew = document.getElementById("panelNew");
+  var existingPhone = document.getElementById("existingPhone");
+  var newName = document.getElementById("newName");
+  var newPhone = document.getElementById("newPhone");
+  var sendOtpBtn = document.getElementById("sendOtpBtn");
+
+  function digitsOnly(v){ return v.replace(/[^0-9]/g, ""); }
+
+  function setAuthTab(mode){
+    authState.mode = mode;
+    tabExisting.classList.toggle("active", mode === "existing");
+    tabNew.classList.toggle("active", mode === "new");
+    panelExisting.classList.toggle("active", mode === "existing");
+    panelNew.classList.toggle("active", mode === "new");
+    validateAuth();
+  }
+  tabExisting.addEventListener("click", function(){ setAuthTab("existing"); });
+  tabNew.addEventListener("click", function(){ setAuthTab("new"); });
+
+  function validateAuth(){
+    var ok;
+    if(authState.mode === "existing"){
+      ok = digitsOnly(existingPhone.value).length === 10;
+    }else{
+      ok = newName.value.trim().length > 1 && digitsOnly(newPhone.value).length === 10;
+    }
+    sendOtpBtn.disabled = !ok;
+  }
+  existingPhone.addEventListener("input", function(){
+    existingPhone.value = digitsOnly(existingPhone.value).slice(0,10);
+    validateAuth();
+  });
+  newPhone.addEventListener("input", function(){
+    newPhone.value = digitsOnly(newPhone.value).slice(0,10);
+    validateAuth();
+  });
+  newName.addEventListener("input", validateAuth);
+
+  function generateDemoOtp(){
+    return String(Math.floor(1000 + Math.random()*9000));
+  }
+
+  function maskPhone(p){
+    return "+91 " + p.slice(0,2) + "XXXXX" + p.slice(7);
+  }
+
+  sendOtpBtn.addEventListener("click", function(){
+    if(authState.mode === "existing"){
+      authState.phone = digitsOnly(existingPhone.value);
+      authState.name = "";
+    }else{
+      authState.phone = digitsOnly(newPhone.value);
+      authState.name = newName.value.trim();
+    }
+    authState.demoOtp = generateDemoOtp();
+    document.getElementById("otpTargetPhone").textContent = maskPhone(authState.phone);
+    document.getElementById("demoOtpValue").textContent = authState.demoOtp;
+    clearOtpBoxes();
+    goToScreen(2);
+    setTimeout(function(){ otpBoxes[0].focus(); }, 350);
+  });
+
+  document.getElementById("backToLogin").addEventListener("click", function(){
+    goToScreen(1);
+  });
+
+  // ---------- OTP screen ----------
+  var otpBoxes = [
+    document.getElementById("otp0"),
+    document.getElementById("otp1"),
+    document.getElementById("otp2"),
+    document.getElementById("otp3")
+  ];
+  var verifyOtpBtn = document.getElementById("verifyOtpBtn");
+  var otpErrorMsg = document.getElementById("otpErrorMsg");
+  var resendOtpBtn = document.getElementById("resendOtpBtn");
+
+  function clearOtpBoxes(){
+    otpBoxes.forEach(function(b){ b.value=""; b.classList.remove("error"); });
+    otpErrorMsg.textContent = "";
+    verifyOtpBtn.disabled = true;
+  }
+
+  function checkOtpFilled(){
+    var val = otpBoxes.map(function(b){ return b.value; }).join("");
+    verifyOtpBtn.disabled = val.length !== 4;
+    return val;
+  }
+
+  otpBoxes.forEach(function(box, idx){
+    box.addEventListener("input", function(){
+      box.value = digitsOnly(box.value).slice(0,1);
+      box.classList.remove("error");
+      otpErrorMsg.textContent = "";
+      if(box.value && idx < otpBoxes.length - 1){
+        otpBoxes[idx+1].focus();
+      }
+      checkOtpFilled();
+    });
+    box.addEventListener("keydown", function(e){
+      if(e.key === "Backspace" && !box.value && idx > 0){
+        otpBoxes[idx-1].focus();
+      }
+    });
+  });
+
+  resendOtpBtn.addEventListener("click", function(){
+    authState.demoOtp = generateDemoOtp();
+    document.getElementById("demoOtpValue").textContent = authState.demoOtp;
+    clearOtpBoxes();
+    otpBoxes[0].focus();
+    resendOtpBtn.disabled = true;
+    resendOtpBtn.textContent = "Sent!";
+    setTimeout(function(){
+      resendOtpBtn.disabled = false;
+      resendOtpBtn.textContent = "Resend code";
+    }, 2500);
+  });
+
+  verifyOtpBtn.addEventListener("click", function(){
+    var entered = checkOtpFilled();
+    if(entered !== authState.demoOtp){
+      otpBoxes.forEach(function(b){ b.classList.add("error"); });
+      otpErrorMsg.textContent = "Incorrect code — please check and try again.";
+      return;
+    }
+    var greeting = document.getElementById("userGreeting");
+    if(authState.name){
+      greeting.textContent = "Hi " + authState.name.split(" ")[0] + ", where are we headed?";
+    }else{
+      greeting.textContent = "Welcome back! Logged in as +91 " + authState.phone.slice(0,2) + "XXXXX" + authState.phone.slice(7);
+    }
+    recordLogin(authState.phone, authState.name);
+    goToScreen(3);
+  });
+
+  // Fires-and-forgets a login record to the backend so it can persist the
+  // user + increment login counters in SQLite. Never blocks the UI or
+  // throws if the server/db is briefly unavailable — login already
+  // succeeded on the client, this is just analytics on top of it.
+  async function recordLogin(phone, name){
+    try{
+      await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: phone, name: name || "" })
+      });
+    }catch(err){
+      // non-critical — ignore
+    }
+  }
+  var pickupInput = document.getElementById("pickup");
+  var dropInput = document.getElementById("drop");
+  var toStep2Btn = document.getElementById("toStep2");
+  var swapBtn = document.getElementById("swapBtn");
+
+  // Exact coordinates get stored here the moment the user picks a suggestion,
+  // so the distance calculation uses the precise spot they confirmed instead
+  // of re-guessing from typed text later (this is what fixes location mismatches).
+  var resolvedPoints = { pickup: null, drop: null };
+
+  function setupAutocomplete(inputEl, listEl, key){
+    var debounceTimer = null;
+
+    inputEl.addEventListener("input", function(){
+      resolvedPoints[key] = null; // typing again invalidates the previous exact match
+      var query = inputEl.value.trim();
+      clearTimeout(debounceTimer);
+      if(query.length < 3){
+        listEl.classList.remove("visible");
+        listEl.innerHTML = "";
+        return;
+      }
+      debounceTimer = setTimeout(function(){ runSuggestSearch(query, listEl, inputEl, key); }, 350);
+    });
+
+    inputEl.addEventListener("blur", function(){
+      // small delay so a click on a suggestion registers before the list closes
+      setTimeout(function(){ listEl.classList.remove("visible"); }, 150);
+    });
+  }
+
+  async function runSuggestSearch(query, listEl, inputEl, key){
+    try{
+      var chennaiBox = "79.6,13.35,80.5,12.6";
+      var url = "https://nominatim.openstreetmap.org/search" +
+        "?format=json&limit=5&addressdetails=1&countrycodes=in" +
+        "&viewbox=" + chennaiBox + "&bounded=1" +
+        "&q=" + encodeURIComponent(query);
+      var res = await fetch(url);
+      var data = await res.json();
+
+      if(!data || !data.length){
+        listEl.innerHTML = '<div class="suggest-empty">No matches nearby — you can still type the full name and continue.</div>';
+        listEl.classList.add("visible");
+        return;
+      }
+
+      listEl.innerHTML = "";
+      data.forEach(function(place){
+        var parts = place.display_name.split(",");
+        var main = parts[0];
+        var sub = parts.slice(1,3).join(",").trim();
+        var item = document.createElement("div");
+        item.className = "suggest-item";
+        item.innerHTML = '<span class="s-main">' + main + '</span><span class="s-sub">' + sub + '</span>';
+        item.addEventListener("mousedown", function(e){
+          e.preventDefault(); // fires before blur, so it registers
+          inputEl.value = main + ", " + sub;
+          resolvedPoints[key] = { lat: parseFloat(place.lat), lng: parseFloat(place.lon), matchedName: place.display_name };
+          listEl.classList.remove("visible");
+          validateStep1();
+        });
+        listEl.appendChild(item);
+      });
+      listEl.classList.add("visible");
+    }catch(err){
+      listEl.classList.remove("visible");
+    }
+  }
+
+  setupAutocomplete(pickupInput, document.getElementById("pickupSuggest"), "pickup");
+  setupAutocomplete(dropInput, document.getElementById("dropSuggest"), "drop");
+
+  // ---------- Agentic layer: natural-language booking command ----------
+  var nlCommandInput = document.getElementById("nlCommand");
+  var nlCommandBtn = document.getElementById("nlCommandBtn");
+  var nlCommandStatus = document.getElementById("nlCommandStatus");
+  state.scheduledFor = null; // { date, time } if the command mentioned one
+
+  async function runNlCommand(){
+    var command = nlCommandInput.value.trim();
+    if(!command) return;
+
+    nlCommandBtn.disabled = true;
+    nlCommandStatus.className = "nl-command-status";
+    nlCommandStatus.textContent = "Reading your request…";
+
+    try{
+      var res = await fetch("/api/parse-booking", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ command: command, now: new Date().toISOString() })
+      });
+      var data = await res.json();
+
+      if(!data || (!data.pickup && !data.drop)){
+        nlCommandStatus.className = "nl-command-status err";
+        nlCommandStatus.textContent = "Couldn't find a pickup and drop in that — try including both, e.g. \"from X to Y\".";
+        return;
+      }
+
+      if(data.pickup){
+        pickupInput.value = data.pickup;
+        resolvedPoints.pickup = null; // typed by AI, not a confirmed map suggestion — will be geocoded
+      }
+      if(data.drop){
+        dropInput.value = data.drop;
+        resolvedPoints.drop = null;
+      }
+      state.scheduledFor = (data.date || data.time) ? { date: data.date, time: data.time } : null;
+
+      if(data.passengers != null){
+        state.members = Math.min(6, Math.max(1, parseInt(data.passengers, 10) || 1));
+        document.getElementById("membersVal").textContent = state.members;
+      }
+      if(data.luggage != null){
+        state.luggage = Math.min(8, Math.max(0, parseInt(data.luggage, 10) || 0));
+        document.getElementById("luggageVal").textContent = state.luggage;
+      }
+
+      var parts = [];
+      if(data.pickup && data.drop) parts.push(data.pickup + " → " + data.drop);
+      if(data.date) parts.push("on " + data.date);
+      if(data.time) parts.push("at " + data.time);
+      if(data.passengers != null) parts.push(state.members + (state.members===1?" passenger":" passengers"));
+      if(data.luggage != null) parts.push(state.luggage + (state.luggage===1?" bag":" bags"));
+      nlCommandStatus.className = "nl-command-status ok";
+      nlCommandStatus.textContent = "Got it: " + parts.join(", ") + ". Fields filled below" +
+        (data.source === "fallback" ? " (offline parser)" : "") + " — review and continue.";
+
+      validateStep1();
+    }catch(err){
+      nlCommandStatus.className = "nl-command-status err";
+      nlCommandStatus.textContent = "Couldn't reach the AI parser — you can still fill the fields below manually.";
+    }finally{
+      nlCommandBtn.disabled = false;
+    }
+  }
+
+  nlCommandBtn.addEventListener("click", runNlCommand);
+  nlCommandInput.addEventListener("keydown", function(e){
+    if(e.key === "Enter"){ e.preventDefault(); runNlCommand(); }
+  });
+
+  // ---------- Voice input for the AI command box ----------
+  var micBtn = document.getElementById("micBtn");
+  var SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if(!SpeechRecognitionCtor){
+    micBtn.disabled = true;
+    micBtn.title = "Voice input isn't supported in this browser — try Chrome";
+  } else {
+    var recognition = new SpeechRecognitionCtor();
+    recognition.lang = "en-IN";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    var isListening = false;
+
+    recognition.onstart = function(){
+      isListening = true;
+      micBtn.classList.add("listening");
+      nlCommandStatus.className = "nl-command-status";
+      nlCommandStatus.textContent = "Listening… speak your request now.";
+    };
+
+    recognition.onresult = function(event){
+      var transcript = event.results[0][0].transcript.trim();
+      nlCommandInput.value = transcript;
+      // auto-run the parser on whatever was heard, same as pressing the send button
+      runNlCommand();
+    };
+
+    recognition.onerror = function(event){
+      nlCommandStatus.className = "nl-command-status err";
+      if(event.error === "not-allowed" || event.error === "service-not-allowed"){
+        nlCommandStatus.textContent = "Microphone access was blocked — allow it in your browser's site settings.";
+      } else if(event.error === "no-speech"){
+        nlCommandStatus.textContent = "Didn't catch that — tap the mic and try again.";
+      } else {
+        nlCommandStatus.textContent = "Voice input error: " + event.error;
+      }
+    };
+
+    recognition.onend = function(){
+      isListening = false;
+      micBtn.classList.remove("listening");
+    };
+
+    micBtn.addEventListener("click", function(){
+      if(isListening){
+        recognition.stop();
+        return;
+      }
+      try{
+        recognition.start();
+      }catch(err){
+        // start() throws if called while already starting/running — ignore, it's a harmless double-tap
+      }
+    });
+  }
+
+  function validateStep1(){
+    var ok = pickupInput.value.trim().length > 1 && dropInput.value.trim().length > 1 &&
+             pickupInput.value.trim().toLowerCase() !== dropInput.value.trim().toLowerCase();
+    toStep2Btn.disabled = !ok;
+  }
+  pickupInput.addEventListener("input", validateStep1);
+  dropInput.addEventListener("input", validateStep1);
+
+  var membersValEl = document.getElementById("membersVal");
+  var luggageValEl = document.getElementById("luggageVal");
+  document.querySelectorAll("[data-counter]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var key = btn.getAttribute("data-counter");
+      var dir = parseInt(btn.getAttribute("data-dir"), 10);
+      var min = key === "members" ? 1 : 0;
+      var max = key === "members" ? 6 : 8;
+      state[key] = Math.min(max, Math.max(min, state[key] + dir));
+      (key === "members" ? membersValEl : luggageValEl).textContent = state[key];
+    });
+  });
+
+  swapBtn.addEventListener("click", function(){
+    var tmp = pickupInput.value;
+    pickupInput.value = dropInput.value;
+    dropInput.value = tmp;
+    var tmpPoint = resolvedPoints.pickup;
+    resolvedPoints.pickup = resolvedPoints.drop;
+    resolvedPoints.drop = tmpPoint;
+    validateStep1();
+  });
+
+  document.querySelectorAll("[data-fill-pickup]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      pickupInput.value = btn.getAttribute("data-fill-pickup");
+      resolvedPoints.pickup = null;
+      validateStep1();
+    });
+  });
+  document.querySelectorAll("[data-fill-drop]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      dropInput.value = btn.getAttribute("data-fill-drop");
+      resolvedPoints.drop = null;
+      validateStep1();
+    });
+  });
+
+  toStep2Btn.addEventListener("click", async function(){
+    state.pickup = pickupInput.value.trim();
+    state.drop = dropInput.value.trim();
+    state.selectedCar = null;
+
+    var originalLabel = toStep2Btn.innerHTML;
+    toStep2Btn.disabled = true;
+    toStep2Btn.textContent = "Finding route…";
+
+    state.distanceKm = await computeRealDistanceAndDrawMap(state.pickup, state.drop, resolvedPoints.pickup, resolvedPoints.drop);
+
+    toStep2Btn.innerHTML = originalLabel;
+    toStep2Btn.disabled = false;
+
+    await buildCarList();
+    document.getElementById("tripFromTo").textContent = state.pickup + "  →  " + state.drop +
+      (state.scheduledFor ? "  (" + [state.scheduledFor.date, state.scheduledFor.time].filter(Boolean).join(" ") + ")" : "");
+    document.getElementById("tripDist").textContent = state.distanceKm + " km";
+
+    var d = state.demand;
+    var conditionsBits = d.aiPowered
+      ? [d.trafficLabel + " traffic", d.demandLabel + " demand"].concat(d.raining ? ["rain"] : [])
+      : [];
+    document.getElementById("distanceLine").textContent =
+      "Estimated distance: " + state.distanceKm + " km. " +
+      (d.aiPowered
+        ? "AI fare model: " + conditionsBits.join(", ") + " → " + d.surge.toFixed(2) + "x fare."
+        : "Prices below update instantly per car type.");
+    goToScreen(4);
+  });
+
+  document.getElementById("backTo1").addEventListener("click", function(){
+    goToScreen(3);
+  });
+
+  // ---------- Screen 2 logic ----------
+  var carListEl = document.getElementById("carList");
+  var toStep3Btn = document.getElementById("toStep3");
+
+  var paymentNames = {
+    upi: "UPI",
+    card: "Card",
+    cash: "Cash",
+    debit: "Debit Card",
+    credit: "Credit Card",
+    points: "Travel Points"
+  };
+
+  function updateToStep3Availability(){
+    toStep3Btn.disabled = !(state.selectedCar && state.paymentMethod);
+  }
+
+  document.querySelectorAll(".payment-option").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      document.querySelectorAll(".payment-option").forEach(function(el){ el.classList.remove("selected"); });
+      btn.classList.add("selected");
+      state.paymentMethod = btn.getAttribute("data-payment");
+      updateToStep3Availability();
+    });
+  });
+
+  async function buildCarList(){
+    carListEl.innerHTML = "";
+
+    // Ask the backend's ML model for a fare multiplier based on live
+    // simulated traffic/demand near the pickup point. Falls back to the
+    // old client-side time-of-day heuristic if the request fails.
+    var demand;
+    try{
+      var pf = await fetch("/api/predict-fare", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({
+          distanceKm: state.distanceKm,
+          baseFare: 100,
+          pickupLat: state.pickupCoords ? state.pickupCoords.lat : null,
+          pickupLng: state.pickupCoords ? state.pickupCoords.lng : null
+        })
+      });
+      var pfData = await pf.json();
+      demand = {
+        level: pfData.demandLabel,
+        surge: pfData.multiplier,
+        waitSavedMins: pfData.trafficLabel === "Low" ? 3 : (pfData.trafficLabel === "Moderate" ? 1 : 0),
+        aiPowered: true,
+        trafficLabel: pfData.trafficLabel,
+        demandLabel: pfData.demandLabel,
+        raining: pfData.raining,
+        zone: pfData.zone
+      };
+    }catch(err){
+      demand = predictDemand(state.pickup);
+      demand.aiPowered = false;
+    }
+    state.demand = demand; // remembered so the confirm step can reuse the same level
+
+    CAR_TYPES.forEach(function(car){
+      var price = (car.base + car.perKm * state.distanceKm) * demand.surge;
+      var etaMins = Math.round((state.distanceKm / car.speedKmh) * 60) + 3 - demand.waitSavedMins;
+      car._price = Math.round(price);
+      car._eta = Math.max(2, etaMins);
+    });
+
+    var rec = getAIRecommendation(state.members, state.luggage);
+
+    CAR_TYPES.forEach(function(car){
+      var isRec = car.id === rec.car.id;
+      var row = document.createElement("div");
+      row.className = "car-option";
+      row.setAttribute("data-car", car.id);
+      row.innerHTML =
+        '<div class="car-icon"><svg viewBox="0 0 24 24">' + car.icon + '</svg></div>' +
+        '<div class="car-info">' +
+          '<div class="name">' + car.name + '</div>' +
+          '<div class="sub">' + car.sub + '</div>' +
+          (isRec ? '<div><span class="ai-badge">🤖 AI Pick</span></div>' : '') +
+        '</div>' +
+        '<div class="car-price">' +
+          '<div class="amt">' + fmtRupee(car._price) + '</div>' +
+          '<div class="eta">' + car._eta + ' min away</div>' +
+        '</div>';
+
+      row.addEventListener("click", function(){
+        document.querySelectorAll(".car-option").forEach(function(el){ el.classList.remove("selected"); });
+        row.classList.add("selected");
+        state.selectedCar = car;
+        document.getElementById("tripEta").textContent = car._eta + " mins";
+        updateToStep3Availability();
+      });
+
+      carListEl.appendChild(row);
+    });
+
+    // Show the AI assistant's reasoning and default the selection to its pick —
+    // the rider can still tap any other car to override it.
+    var aiCard = document.getElementById("aiSuggestCard");
+    var aiText = document.getElementById("aiSuggestText");
+    var pax = state.members + (state.members === 1 ? " passenger" : " passengers");
+    var bags = state.luggage + (state.luggage === 1 ? " bag" : " bags");
+    if(rec.fits){
+      aiText.textContent =
+        "For " + pax + " and " + bags + ", the " + rec.car.name +
+        " is the most affordable ride that comfortably fits everyone — " + fmtRupee(rec.car._price) + ".";
+    }else{
+      aiText.textContent =
+        "That's a lot for one car! With " + pax + " and " + bags + ", even the " + rec.car.name +
+        " (" + rec.car.seats + " seats, fits " + rec.car.luggage + " bags) may be a tight fit — consider two vehicles.";
+    }
+    aiCard.style.display = "flex";
+
+    var demandCard = document.getElementById("demandCard");
+    var demandText = document.getElementById("demandText");
+    demandCard.style.display = "flex";
+    if(demand.surge > 1){
+      demandText.textContent =
+        "Demand near " + state.pickup + " is currently " + demand.level +
+        ", so fares include a " + demand.surge.toFixed(2) + "x factor — but AI prepositioned nearby drivers, cutting your wait by about " +
+        demand.waitSavedMins + " min.";
+    }else{
+      demandText.textContent =
+        "Demand near " + state.pickup + " is " + demand.level + " right now — no surge, and drivers are readily available.";
+    }
+    fetchAgentExplanation("demand", {
+      demandLevel: demand.level,
+      surge: demand.surge,
+      waitSavedMins: demand.waitSavedMins,
+      pickup: state.pickup
+    }, demandText);
+
+    var recRow = carListEl.querySelector('[data-car="' + rec.car.id + '"]');
+    if(recRow) recRow.click();
+
+    document.getElementById("tripEta").textContent = rec.car._eta + " mins";
+    state.paymentMethod = null;
+    document.querySelectorAll(".payment-option").forEach(function(el){ el.classList.remove("selected"); });
+  }
+
+  var rideLoadingOverlay = document.getElementById("rideLoadingOverlay");
+
+  // ---------- AI safety monitoring ----------
+  // Simulates comparing the driver's live GPS path against the planned OSRM
+  // route (and watching for a driver drifting away instead of approaching).
+  // In a real system this would consume a live location feed; here it ticks
+  // every few seconds with a small chance of flagging a deviation, purely
+  // for demonstration purposes.
+  var safetyTimer = null;
+
+  function startSafetyMonitoring(){
+    clearInterval(safetyTimer);
+    var dot = document.getElementById("safetyDot");
+    var statusText = document.getElementById("safetyStatusText");
+    var sub = document.getElementById("safetySub");
+    var alertBtn = document.getElementById("alertContactBtn");
+
+    dot.className = "safety-dot ok";
+    statusText.textContent = "Live trip monitoring active";
+    sub.textContent = "AI is comparing your driver's live location to the planned route.";
+    alertBtn.style.display = "none";
+
+    var ticks = 0;
+    safetyTimer = setInterval(function(){
+      ticks++;
+      if(ticks > 6){ clearInterval(safetyTimer); return; }
+      // ~18% chance per check of a simulated deviation, for demo purposes
+      if(Math.random() < 0.18){
+        dot.className = "safety-dot alert";
+        statusText.textContent = "Route deviation detected";
+        sub.textContent = "Your driver has moved off the expected route. AI has flagged this trip for review.";
+        alertBtn.style.display = "inline-block";
+        fetchAgentExplanation("safety", { deviation:true, distanceKm: state.distanceKm }, sub);
+        clearInterval(safetyTimer);
+      }
+    }, 4000);
+  }
+
+  document.getElementById("alertContactBtn").addEventListener("click", function(){
+    window.alert("Demo: your emergency contact has been notified with your live trip location.");
+  });
+
+  toStep3Btn.addEventListener("click", function(){
+    if(!state.selectedCar || !state.paymentMethod) return;
+    var car = state.selectedCar;
+    // car._price already includes the demand surge multiplier; back out the
+    // distance-charge portion so the fare rows still add up to the total.
+    var distCharge = car._price - car.base;
+    var demand = state.demand || predictDemand(state.pickup);
+
+    var assignment = assignReliableDriver(car.id, {
+      distanceKm: state.distanceKm,
+      paymentMethod: state.paymentMethod,
+      demandLevel: demand.level
+    });
+    var driver = assignment.driver;
+
+    document.getElementById("confirmSub").textContent =
+      car.name + " confirmed for your ride to " + state.drop + ".";
+    document.getElementById("driverName").textContent = driver.name;
+    document.getElementById("driverInitial").textContent = driver.name.charAt(0);
+    document.getElementById("driverCar").textContent = car.name + " • arriving in " + car._eta + " min";
+    document.getElementById("otpVal").textContent = String(Math.floor(1000 + Math.random()*9000));
+    document.getElementById("plateNo").textContent =
+      "TN " + (10 + Math.floor(Math.random()*80)) + " " +
+      String.fromCharCode(65+Math.floor(Math.random()*26)) + String.fromCharCode(65+Math.floor(Math.random()*26)) +
+      " " + Math.floor(1000 + Math.random()*8999);
+
+    document.getElementById("fareCarName").textContent = car.name + " fare";
+    document.getElementById("fareDist").textContent = state.distanceKm + " km";
+    document.getElementById("fareBase").textContent = fmtRupee(car.base);
+    document.getElementById("fareDistCharge").textContent = fmtRupee(distCharge);
+
+    var fareAiRow = document.getElementById("fareAiRow");
+    if(state.demand && state.demand.aiPowered && state.demand.surge !== 1){
+      var pct = Math.round((state.demand.surge - 1) * 100);
+      document.getElementById("fareAiLabel").textContent =
+        "AI adjustment (" + state.demand.trafficLabel + " traffic, " + state.demand.demandLabel + " demand)";
+      document.getElementById("fareAiVal").textContent = (pct >= 0 ? "+" : "") + pct + "%";
+      fareAiRow.style.display = "flex";
+    } else {
+      fareAiRow.style.display = "none";
+    }
+
+    document.getElementById("farePayment").textContent = paymentNames[state.paymentMethod] || "—";
+    document.getElementById("fareTotal").textContent = fmtRupee(car._price);
+
+    // AI dispatch agent: show the heuristic explanation immediately, then
+    // swap in the Groq-polished version once it comes back.
+    var driverCard = document.getElementById("driverAiCard");
+    var driverText = document.getElementById("driverAiText");
+    driverCard.style.display = "flex";
+    driverText.textContent =
+      driver.name + " assigned — predicted " + assignment.reliability +
+      "% reliable (low cancellation risk) among nearby " + car.name + " drivers. Demand nearby is " +
+      demand.level + ", so drivers were prepositioned to cut your wait.";
+    fetchAgentExplanation("driver-assignment", {
+      driverName: driver.name,
+      reliability: assignment.reliability,
+      rating: driver.rating,
+      demandLevel: demand.level,
+      waitSavedMins: demand.waitSavedMins,
+      distanceKm: state.distanceKm
+    }, driverText);
+
+    startSafetyMonitoring();
+
+    // play the sunny drive animation, then reveal the confirmation screen
+    rideLoadingOverlay.classList.add("visible");
+    setTimeout(function(){
+      rideLoadingOverlay.classList.remove("visible");
+      goToScreen(5);
+    }, 1800);
+  });
+
+  document.getElementById("bookAnother").addEventListener("click", function(){
+    clearInterval(safetyTimer);
+    pickupInput.value = "";
+    dropInput.value = "";
+    resolvedPoints.pickup = null;
+    resolvedPoints.drop = null;
+    state = {pickup:"", drop:"", distanceKm:0, etaMins:0, members:1, luggage:0, selectedCar:null, paymentMethod:null};
+    membersValEl.textContent = "1";
+    luggageValEl.textContent = "0";
+    document.querySelectorAll(".payment-option").forEach(function(el){ el.classList.remove("selected"); });
+    routeMapEl.classList.remove("visible");
+    mapStatusEl.textContent = "";
+    toStep2Btn.disabled = true;
+    goToScreen(3);
+  });
+
+  // ---------- Logout ----------
+  logoutBtn.addEventListener("click", function(){
+    var confirmLogout = window.confirm("Log out of go_travels?");
+    if(!confirmLogout) return;
+    clearInterval(safetyTimer);
+
+    // reset trip state
+    pickupInput.value = "";
+    dropInput.value = "";
+    resolvedPoints.pickup = null;
+    resolvedPoints.drop = null;
+    state = {pickup:"", drop:"", distanceKm:0, etaMins:0, members:1, luggage:0, selectedCar:null, paymentMethod:null};
+    membersValEl.textContent = "1";
+    luggageValEl.textContent = "0";
+    document.querySelectorAll(".payment-option").forEach(function(el){ el.classList.remove("selected"); });
+    routeMapEl.classList.remove("visible");
+    mapStatusEl.textContent = "";
+    toStep2Btn.disabled = true;
+
+    // reset auth state
+    authState = { mode: "existing", name: "", phone: "", demoOtp: "" };
+    existingPhone.value = "";
+    newPhone.value = "";
+    newName.value = "";
+    setAuthTab("existing");
+    clearOtpBoxes();
+
+    goToScreen(1);
+  });
+
+})();
+</script>
+
+<script>
+// ---------- AI support chat widget (talks to /api/support-chat, backed by Groq) ----------
+(function(){
+  "use strict";
+
+  var fab = document.getElementById("aiChatFab");
+  var panel = document.getElementById("aiChatPanel");
+  var closeBtn = document.getElementById("aiChatClose");
+  var messagesEl = document.getElementById("aiChatMessages");
+  var inputEl = document.getElementById("aiChatInput");
+  var sendBtn = document.getElementById("aiChatSend");
+  var chatHistory = [];
+
+  // Mirrors the server-side check so an emergency gets an instant, guaranteed
+  // response on-screen even before the network round trip to our own backend
+  // completes. The backend performs the same check independently — this is
+  // belt-and-braces, not a replacement for it.
+  var EMERGENCY_KEYWORDS = [
+    "emergency", "accident", "unsafe", "danger", "sos", "help me",
+    "assault", "harass", "police", "threat", "kidnap", "attacked",
+    "stranded", "robbed", "scared", "following me"
+  ];
+  var EMERGENCY_REPLY =
+    "🚨 If you're in immediate danger, call 112 (India's National Emergency Number) or 100 (Police) right now. " +
+    "You can also tap \"Alert emergency contact\" on your active trip screen to notify your saved contact instantly. " +
+    "Stay on the line with them if you can, and share your live location.";
+
+  function looksLikeEmergency(text){
+    var t = text.toLowerCase();
+    return EMERGENCY_KEYWORDS.some(function(k){ return t.indexOf(k) !== -1; });
+  }
+
+  function addMessage(text, cls){
+    var div = document.createElement("div");
+    div.className = "chat-msg " + cls;
+    div.textContent = text;
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return div;
+  }
+
+  function openChat(){
+    panel.classList.add("open");
+    if(!messagesEl.children.length){
+      addMessage(
+        "Hi! I'm the go_travels AI assistant. Ask me about fares, bookings, cancellations, or safety features. " +
+        "In an emergency, call 112 or 100 right away.",
+        "bot"
+      );
+    }
+    inputEl.focus();
+  }
+  function closeChat(){ panel.classList.remove("open"); }
+
+  fab.addEventListener("click", function(){
+    if(panel.classList.contains("open")) closeChat(); else openChat();
+  });
+  closeBtn.addEventListener("click", closeChat);
+
+  async function sendMessage(){
+    var text = inputEl.value.trim();
+    if(!text) return;
+    inputEl.value = "";
+    addMessage(text, "user");
+    chatHistory.push({ role:"user", content:text });
+
+    // Instant local emergency response — doesn't wait on any network call.
+    if(looksLikeEmergency(text)){
+      addMessage(EMERGENCY_REPLY, "emergency");
+    }
+
+    var typingEl = addMessage("Thinking…", "bot typing");
+
+    try{
+      var res = await fetch("/api/support-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text, history: chatHistory.slice(-8) })
+      });
+      var data = await res.json();
+      typingEl.remove();
+      if(data && data.reply){
+        // Avoid showing the emergency message twice if we already displayed
+        // the local instant version above.
+        if(!(data.emergency && looksLikeEmergency(text))){
+          addMessage(data.reply, data.emergency ? "emergency" : "bot");
+        }
+        chatHistory.push({ role:"assistant", content:data.reply });
+      }
+    }catch(err){
+      typingEl.remove();
+      addMessage("I couldn't reach support right now — please try again in a moment.", "bot");
+    }
+  }
+
+  sendBtn.addEventListener("click", sendMessage);
+  inputEl.addEventListener("keydown", function(e){
+    if(e.key === "Enter") sendMessage();
+  });
+})();
+</script>
+</body>
+</html>
