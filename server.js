@@ -8,6 +8,11 @@ const mlFareModel = require("./ml-fare-model");
 
 const app = express();
 
+// Groq model used for every AI call below. The old model (llama-3.3-70b-versatile)
+// was shut down by Groq on 16 Aug 2026, which caused the "Groq API error 404".
+// You can change it later from Render's Environment tab (GROQ_MODEL) without editing code.
+const GROQ_MODEL = process.env.GROQ_MODEL || "openai/gpt-oss-120b";
+
 app.use(express.json());
 app.use(express.static(__dirname));
 
@@ -21,6 +26,15 @@ app.get("/", (req, res) => {
 
 const WEEKDAYS = ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];
 
+
+// removes leftover phrases like "two passenger" or "1 luggage bag" from the end of a location
+function cleanLocation(place) {
+    if (!place) return place;
+    var cleaned = place.replace(/\s+(?:\d+|zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s*(?:passengers?|people|persons?|pax|bags?|luggage|suitcases?)\b.*$/i, "");
+    cleaned = cleaned.replace(/\s+(?:and|with|for)$/i, "");
+    return cleaned.trim();
+}
+
 function fallbackParseBooking(command, nowISO) {
     var now = nowISO ? new Date(nowISO) : new Date();
     var text = String(command || "");
@@ -28,8 +42,10 @@ function fallbackParseBooking(command, nowISO) {
 
     var result = { pickup: null, drop: null, date: null, time: null, passengers: null, luggage: null, source: "fallback" };
 
-    // "from X to Y" — also handles "to Y from X"
-    var stopWords = "(?:on|at|tomorrow|today|tonight|by|next|" + WEEKDAYS.join("|") + ")";
+    // "from X to Y" — also handles "to Y from X". "with"/"for" are included as
+    // stop words so trailing clauses like "...to Y with 2 bags" don't get
+    // swallowed into the location text.
+    var stopWords = "(?:on|at|tomorrow|today|tonight|by|next|with|for|" + WEEKDAYS.join("|") + ")";
     var fromTo = lower.match(new RegExp("from\\s+(.+?)\\s+to\\s+(.+?)(?:\\s+" + stopWords + "\\b|[.,]|$)", "i"));
     if (fromTo) {
         result.pickup = titleCaseFromOriginal(text, fromTo[1]);
@@ -41,6 +57,9 @@ function fallbackParseBooking(command, nowISO) {
             result.pickup = titleCaseFromOriginal(text, toFrom[2]);
         }
     }
+
+    result.pickup = cleanLocation(result.pickup);
+    result.drop = cleanLocation(result.drop);
 
     // date
     function pad(n){ return String(n).padStart(2, "0"); }
@@ -83,15 +102,38 @@ function fallbackParseBooking(command, nowISO) {
         if (time24) result.time = pad(parseInt(time24[1],10)) + ":" + time24[2];
     }
 
-    // passengers — "3 passengers", "for 2 people", "party of 4"
-    var paxMatch = lower.match(/\b(\d+)\s*(?:passengers?|people|persons?|pax)\b/) ||
-                    lower.match(/\bparty of\s*(\d+)\b/) ||
-                    lower.match(/\bfor\s*(\d+)\s*(?:of us)?\b(?=.*(?:passenger|people|person|going|travel))/);
+    // Spoken numbers often come through as words ("two", "six") rather than
+    // digits — normalize a separate copy of the text so passenger/luggage
+    // extraction works regardless of how it was said. (Kept separate from
+    // `lower`/`text` above so location extraction still indexes correctly
+    // against the original wording.)
+    var NUM_WORDS = { zero:0, one:1, two:2, three:3, four:4, five:5, six:6, seven:7, eight:8, nine:9, ten:10, eleven:11, twelve:12 };
+    var normalizedNums = lower.replace(/\b(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\b/g,
+        function(w){ return String(NUM_WORDS[w]); });
+
+    // passengers — "3 passengers", "for 2 people", "party of 4", "in two passenger"
+    var paxMatch = normalizedNums.match(/\b(\d+)\s*(?:passengers?|people|persons?|pax)\b/) ||
+                    normalizedNums.match(/\bparty of\s*(\d+)\b/) ||
+                    normalizedNums.match(/\bfor\s*(\d+)\s*(?:of us)?\b(?=.*(?:passenger|people|person|going|travel))/);
     if (paxMatch) result.passengers = parseInt(paxMatch[1], 10);
 
     // luggage — "2 bags", "3 luggage", "1 suitcase"
-    var luggageMatch = lower.match(/\b(\d+)\s*(?:bags?|luggage|suitcases?|bagages?)\b/);
+    var luggageMatch = normalizedNums.match(/\b(\d+)\s*(?:bags?|luggage|suitcases?|bagages?)\b/);
     if (luggageMatch) result.luggage = parseInt(luggageMatch[1], 10);
+
+    // payment method, if mentioned
+    if (/\bupi\b/.test(normalizedNums)) result.paymentMethod = "upi";
+    else if (/\bcash\b/.test(normalizedNums)) result.paymentMethod = "cash";
+    else if (/\bdebit\b/.test(normalizedNums)) result.paymentMethod = "debit";
+    else if (/\bcredit\b/.test(normalizedNums)) result.paymentMethod = "credit";
+    else if (/\bpoints?\b/.test(normalizedNums)) result.paymentMethod = "points";
+    else if (/\bcard\b/.test(normalizedNums)) result.paymentMethod = "card";
+    else result.paymentMethod = null;
+
+    // whether this sounds like a direct booking instruction ("book a cab...")
+    // vs just providing details — used by the frontend to decide whether to
+    // auto-complete the booking or just fill the form for review
+    result.bookIntent = /\bbook\b/.test(normalizedNums);
 
     return result;
 }
@@ -121,7 +163,9 @@ app.post("/api/parse-booking", async (req, res) => {
             "Indian cab-booking app. The current date/time (ISO) will be given so you can resolve relative " +
             "dates like 'tomorrow' or 'next Friday'. Reply with ONLY a JSON object, no other text, in this " +
             'exact shape: {"pickup": string|null, "drop": string|null, "date": "YYYY-MM-DD"|null, "time": "HH:MM"|null, ' +
-            '"passengers": number|null, "luggage": number|null} (24-hour time). Use null for anything not mentioned. ' +
+            '"passengers": number|null, "luggage": number|null, "paymentMethod": "upi"|"card"|"cash"|"debit"|"credit"|"points"|null, ' +
+            '"bookIntent": boolean} (24-hour time). bookIntent is true if the rider is directly instructing a booking ' +
+            '(e.g. "book a cab...", "get me a ride...") rather than just describing details. Use null for anything not mentioned. ' +
             "Do not invent locations, passenger counts, or luggage counts that weren't said.";
 
         const userPrompt = "Current date/time: " + (now || new Date().toISOString()) + "\nRequest: " + command;
@@ -133,12 +177,13 @@ app.post("/api/parse-booking", async (req, res) => {
                 "Authorization": "Bearer " + process.env.GROQ_API_KEY
             },
             body: JSON.stringify({
-                model: "llama-3.3-70b-versatile",
+                model: GROQ_MODEL,
+                reasoning_effort: "low",
                 messages: [
                     { role: "system", content: systemPrompt },
                     { role: "user", content: userPrompt }
                 ],
-                max_tokens: 200,
+                max_tokens: 1000,
                 temperature: 0.1,
                 response_format: { type: "json_object" }
             })
@@ -158,6 +203,8 @@ app.post("/api/parse-booking", async (req, res) => {
             date: parsed.date || null,
             passengers: parsed.passengers != null ? parsed.passengers : null,
             luggage: parsed.luggage != null ? parsed.luggage : null,
+            paymentMethod: parsed.paymentMethod || null,
+            bookIntent: !!parsed.bookIntent,
             time: parsed.time || null,
             source: "groq"
         });
@@ -378,7 +425,8 @@ app.post("/api/agent", async (req, res) => {
                         "Bearer " + process.env.GROQ_API_KEY
                 },
                 body: JSON.stringify({
-                    model: "llama-3.3-70b-versatile",
+                    model: GROQ_MODEL,
+                reasoning_effort: "low",
                     messages: [
                         {
                             role: "system",
@@ -389,7 +437,7 @@ app.post("/api/agent", async (req, res) => {
                             content: userPrompt
                         }
                     ],
-                    max_tokens: 200,
+                    max_tokens: 800,
                     temperature: 0.5
                 })
             }
@@ -577,9 +625,10 @@ app.post("/api/support-chat", async (req, res) => {
                         "Bearer " + process.env.GROQ_API_KEY
                 },
                 body: JSON.stringify({
-                    model: "llama-3.3-70b-versatile",
+                    model: GROQ_MODEL,
+                reasoning_effort: "low",
                     messages,
-                    max_tokens: 250,
+                    max_tokens: 800,
                     temperature: 0.6
                 })
             }
