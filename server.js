@@ -27,6 +27,12 @@ app.get("/", (req, res) => {
 const WEEKDAYS = ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];
 
 
+// The AI sometimes says bookIntent = false even for "book a cab ..." sentences.
+// This simple check makes sure such sentences are still treated as a booking.
+function looksLikeBooking(command) {
+    return /\b(book|get me|arrange|i need a (?:cab|car|taxi|ride)|i want a (?:cab|car|taxi|ride))\b/i.test(String(command || ""));
+}
+
 // removes leftover phrases like "two passenger" or "1 luggage bag" from the end of a location
 function cleanLocation(place) {
     if (!place) return place;
@@ -204,7 +210,7 @@ app.post("/api/parse-booking", async (req, res) => {
             passengers: parsed.passengers != null ? parsed.passengers : null,
             luggage: parsed.luggage != null ? parsed.luggage : null,
             paymentMethod: parsed.paymentMethod || null,
-            bookIntent: !!parsed.bookIntent,
+            bookIntent: !!parsed.bookIntent || looksLikeBooking(command),
             time: parsed.time || null,
             source: "groq"
         });
