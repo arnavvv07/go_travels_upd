@@ -1,0 +1,3225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>go_travels — AI-Powered Luxury Ride Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  :root {
+    --bg-base: #070B14;
+    --bg-surface: #0E1626;
+    --bg-surface-elevated: #141F36;
+    --bg-surface-glass: rgba(14, 22, 38, 0.82);
+    --bg-input: #090F1C;
+    
+    --line: rgba(255, 255, 255, 0.08);
+    --line-active: rgba(59, 130, 246, 0.45);
+    --line-focus: #3B82F6;
+    
+    --brand-blue: #2563EB;
+    --brand-blue-glow: #3B82F6;
+    --brand-blue-soft: rgba(37, 99, 235, 0.16);
+    
+    --brand-orange: #EA580C;
+    --brand-orange-glow: #F97316;
+    --brand-orange-soft: rgba(234, 88, 12, 0.16);
+    
+    --teal: #06B6D4;
+    --amber: #F59E0B;
+    --emerald: #10B981;
+    --danger: #EF4444;
+    --danger-soft: rgba(239, 68, 68, 0.14);
+    
+    --text: #F8FAFC;
+    --text-secondary: #CBD5E1;
+    --text-muted: #64748B;
+    
+    --font-heading: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    
+    --shadow-subtle: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
+    --shadow-elevated: 0 16px 36px -4px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.06);
+    --shadow-glow: 0 0 24px rgba(59, 130, 246, 0.22);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  html, body {
+    min-height: 100%;
+    background-color: var(--bg-base);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  body {
+    background:
+      radial-gradient(1000px 500px at 10% -10%, rgba(37, 99, 235, 0.14), transparent 60%),
+      radial-gradient(800px 500px at 90% 0%, rgba(234, 88, 12, 0.11), transparent 65%),
+      radial-gradient(1200px 600px at 50% 100%, rgba(14, 22, 38, 0.6), transparent),
+      var(--bg-base);
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    background: rgba(59, 130, 246, 0.35);
+    color: #fff;
+  }
+
+  /* ---- Main App Shell ---- */
+  .app {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    padding: 0 16px 40px;
+  }
+
+  @media (min-width: 768px) {
+    .app {
+      padding: 0 32px 48px;
+    }
+  }
+
+  /* ---- Header / Topbar ---- */
+  header.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 0;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+    position: relative;
+    z-index: 50;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    cursor: default;
+  }
+
+  .brand-mark {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.2), rgba(234, 88, 12, 0.2));
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+    padding: 6px;
+  }
+
+  .brand-mark img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 6px rgba(59, 130, 246, 0.4));
+  }
+
+  .brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+  }
+
+  .brand-name {
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 20px;
+    letter-spacing: -0.3px;
+    background: linear-gradient(110deg, #FFFFFF 0%, #93C5FD 45%, #FDBA74 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .brand-tagline {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .step-dots {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-surface);
+    padding: 6px 12px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--line);
+  }
+
+  .step-dots span.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--line);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .step-dots span.dot.active {
+    background: linear-gradient(135deg, var(--brand-blue-glow), var(--brand-orange-glow));
+    transform: scale(1.35);
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
+  }
+
+  .logout-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--bg-surface);
+    border: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .logout-btn svg { width: 16px; height: 16px; }
+  .logout-btn:hover {
+    color: var(--danger);
+    border-color: rgba(239, 68, 68, 0.4);
+    background: var(--danger-soft);
+    transform: translateY(-1px);
+  }
+
+  /* ---- Live Traffic Conditions Badge ---- */
+  .traffic-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: fit-content;
+    margin: 12px auto 20px;
+    background: var(--bg-surface-glass);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--line);
+    border-radius: 9999px;
+    padding: 7px 18px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+  }
+
+  .tb-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--teal);
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .tb-dot::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    background: inherit;
+    opacity: 0.4;
+    animation: pulseRing 2s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+  }
+
+  .tb-dot.low { background: var(--emerald); }
+  .tb-dot.moderate { background: var(--amber); }
+  .tb-dot.high { background: var(--danger); }
+
+  @keyframes pulseRing {
+    0% { transform: scale(0.8); opacity: 0.8; }
+    100% { transform: scale(2.2); opacity: 0; }
+  }
+
+  /* ---- Main Viewport & Screen Transitions ---- */
+  main {
+    flex: 1;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .screen {
+    display: none;
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    width: 100%;
+  }
+
+  .screen.active {
+    display: flex;
+    flex-direction: column;
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ---- Typography & Headers ---- */
+  h1.page-title {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: clamp(24px, 4vw, 32px);
+    line-height: 1.25;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+
+  .grad-text {
+    background: linear-gradient(110deg, #FFFFFF 0%, #93C5FD 40%, #FDBA74 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  p.page-sub {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-bottom: 24px;
+    max-width: 600px;
+  }
+
+  .hero-logo {
+    display: block;
+    width: min(85%, 260px);
+    margin: 8px auto 12px;
+    filter: drop-shadow(0 12px 28px rgba(37, 99, 235, 0.28)) drop-shadow(0 6px 16px rgba(234, 88, 12, 0.2));
+  }
+
+  .hero-tagline {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--brand-orange-glow);
+    margin-bottom: 24px;
+  }
+
+  /* ---- Responsive Two-Column Layout Grid for Desktop ---- */
+  .layout-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    width: 100%;
+    align-items: start;
+  }
+
+  @media (min-width: 960px) {
+    .layout-grid {
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 32px;
+    }
+  }
+
+  .layout-col {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  /* ---- Auth Screen Containers ---- */
+  .auth-container {
+    max-width: 440px;
+    margin: 16px auto 32px;
+    width: 100%;
+  }
+
+  .auth-tabs {
+    display: flex;
+    background: var(--bg-surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 4px;
+    margin-bottom: 20px;
+  }
+
+  .tab-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 13.5px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+
+  .tab-btn.active {
+    background: linear-gradient(135deg, var(--brand-blue), #1D4ED8);
+    color: #FFFFFF;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+  }
+
+  .auth-card {
+    background: var(--bg-surface-glass);
+    backdrop-filter: blur(14px);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-elevated);
+  }
+
+  .auth-panel { display: none; flex-direction: column; gap: 16px; }
+  .auth-panel.active { display: flex; }
+
+  .phone-field {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg-input);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 4px 14px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .phone-field:focus-within {
+    border-color: var(--brand-blue-glow);
+    box-shadow: 0 0 0 3px var(--brand-blue-soft);
+  }
+
+  .phone-field .code {
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 14px;
+    border-right: 1px solid var(--line);
+    padding-right: 12px;
+  }
+
+  .phone-field .field { flex: 1; }
+  .phone-field .field label { display: none; }
+  .phone-field .field input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 500;
+    padding: 10px 0;
+    outline: none;
+  }
+
+  .field label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  .field input {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: inherit;
+    padding: 12px 14px;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .field input:focus {
+    border-color: var(--brand-blue-glow);
+    box-shadow: 0 0 0 3px var(--brand-blue-soft);
+  }
+
+  .auth-hint {
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+
+  /* ---- OTP Screen ---- */
+  .otp-target {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+  .otp-target b { color: var(--text); }
+
+  .otp-digits {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .otp-digit {
+    width: 56px;
+    height: 64px;
+    text-align: center;
+    font-family: var(--font-heading);
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text);
+    background: var(--bg-input);
+    border: 1.5px solid var(--line);
+    border-radius: 14px;
+    outline: none;
+    transition: all 0.2s ease;
+  }
+
+  .otp-digit:focus {
+    border-color: var(--brand-blue-glow);
+    box-shadow: 0 0 0 4px var(--brand-blue-soft);
+    transform: translateY(-2px);
+  }
+
+  .otp-digit.error {
+    border-color: var(--danger);
+    background: var(--danger-soft);
+  }
+
+  .otp-demo-hint {
+    text-align: center;
+    background: var(--bg-surface);
+    border: 1px dashed rgba(245, 158, 11, 0.4);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+  }
+
+  .otp-demo-hint b {
+    color: var(--amber);
+    font-family: var(--font-mono);
+    letter-spacing: 0.12em;
+    font-size: 14px;
+  }
+
+  .otp-error-msg {
+    text-align: center;
+    color: var(--danger);
+    font-size: 12.5px;
+    margin: -8px 0 14px;
+    min-height: 18px;
+    font-weight: 500;
+  }
+
+  .resend-row {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+  }
+
+  .resend-row button {
+    background: none;
+    border: none;
+    color: var(--brand-blue-glow);
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0 4px;
+    transition: color 0.2s;
+  }
+  .resend-row button:hover { color: #93C5FD; }
+  .resend-row button:disabled { color: var(--text-muted); cursor: default; }
+
+  /* ---- Buttons ---- */
+  .btn-primary {
+    background: linear-gradient(135deg, var(--brand-blue) 0%, #1D4ED8 100%);
+    color: #FFFFFF;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 15px;
+    padding: 14px 22px;
+    border-radius: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
+    width: 100%;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(37, 99, 235, 0.45);
+    background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  }
+
+  .btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  .btn-primary svg { width: 18px; height: 18px; }
+
+  .btn-ghost {
+    background: var(--bg-surface);
+    border: 1px solid var(--line);
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-weight: 500;
+    font-size: 13.5px;
+    padding: 12px 18px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-ghost:hover {
+    color: var(--text);
+    border-color: rgba(255, 255, 255, 0.2);
+    background: var(--bg-surface-elevated);
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-bottom: 16px;
+    padding: 4px 0;
+    transition: color 0.2s ease;
+  }
+  .back-link:hover { color: var(--text); }
+  .back-link svg { width: 15px; height: 15px; }
+
+  /* ---- Natural Language Command Card (AI Bar) ---- */
+  .nl-command-card {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(234, 88, 12, 0.08));
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 18px;
+    padding: 16px 18px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  }
+
+  .nl-command-card label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--brand-blue-glow);
+    margin-bottom: 10px;
+  }
+
+  .nl-command-card label::before {
+    content: '⚡';
+    font-size: 13px;
+  }
+
+  .nl-command-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .nl-command-row input {
+    flex: 1;
+    background: var(--bg-surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-size: 13.5px;
+    outline: none;
+    transition: all 0.2s ease;
+  }
+
+  .nl-command-row input:focus {
+    border-color: var(--brand-blue-glow);
+    box-shadow: 0 0 0 3px var(--brand-blue-soft);
+  }
+
+  .nl-command-row button {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, var(--brand-blue), var(--brand-blue-glow));
+    border: none;
+    border-radius: 12px;
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  }
+
+  .nl-command-row button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.45);
+  }
+
+  .nl-command-row button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  #micBtn {
+    background: var(--bg-surface);
+    border: 1px solid var(--line);
+    color: var(--text-secondary);
+    box-shadow: none;
+  }
+
+  #micBtn:hover:not(:disabled) {
+    color: var(--text);
+    border-color: rgba(255, 255, 255, 0.25);
+    background: var(--bg-surface-elevated);
+  }
+
+  #micBtn.listening {
+    background: linear-gradient(135deg, #EF4444, #DC2626);
+    color: #FFFFFF;
+    border-color: transparent;
+    animation: micPulse 1.4s infinite;
+  }
+
+  @keyframes micPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+    50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+  }
+
+  .nl-command-status {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 10px;
+    min-height: 18px;
+    line-height: 1.4;
+  }
+  .nl-command-status.ok { color: var(--emerald); font-weight: 500; }
+  .nl-command-status.err { color: var(--danger); font-weight: 500; }
+
+  /* ---- Route Card & Inputs ---- */
+  .route-card {
+    background: var(--bg-surface-glass);
+    backdrop-filter: blur(14px);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 20px 18px;
+    position: relative;
+    box-shadow: var(--shadow-subtle);
+  }
+
+  .route-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    position: relative;
+  }
+
+  .route-track {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 18px;
+    padding-top: 26px;
+  }
+
+  .dot-pickup, .dot-drop {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .dot-pickup {
+    background: var(--teal);
+    box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.2);
+  }
+
+  .dot-drop {
+    background: var(--brand-orange-glow);
+    box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.2);
+  }
+
+  .connector {
+    width: 2px;
+    height: 48px;
+    background: repeating-linear-gradient(to bottom, var(--line) 0 4px, transparent 4px 8px);
+    margin: 4px 0;
+  }
+
+  .route-inputs {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .route-inputs .field input {
+    background: var(--bg-input);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 14px;
+    color: var(--text);
+  }
+
+  .route-inputs .field input:focus {
+    border-color: var(--brand-blue-glow);
+    box-shadow: 0 0 0 3px var(--brand-blue-soft);
+  }
+
+  .swap-btn {
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--bg-surface-elevated);
+    border: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: all 0.25s ease;
+    z-index: 10;
+  }
+
+  .swap-btn:hover {
+    color: var(--brand-orange-glow);
+    border-color: var(--brand-orange-glow);
+    transform: translateY(-50%) rotate(180deg);
+  }
+
+  /* ---- Autocomplete Suggestions ---- */
+  .suggest-list {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 80;
+    background: var(--bg-surface-elevated);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    overflow: hidden;
+    display: none;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  }
+
+  .suggest-list.visible { display: block; }
+
+  .suggest-item {
+    padding: 11px 14px;
+    font-size: 13px;
+    color: var(--text);
+    cursor: pointer;
+    border-bottom: 1px solid var(--line);
+    transition: background 0.15s ease;
+  }
+
+  .suggest-item:last-child { border-bottom: none; }
+  .suggest-item:hover, .suggest-item.active { background: var(--brand-blue-soft); }
+  .suggest-item .s-main { display: block; font-weight: 500; color: var(--text); }
+  .suggest-item .s-sub { display: block; color: var(--text-muted); font-size: 11px; margin-top: 2px; }
+  .suggest-empty { padding: 12px 14px; font-size: 12px; color: var(--text-muted); font-style: italic; }
+
+  /* ---- Map Container ---- */
+  #routeMap {
+    height: 240px;
+    width: 100%;
+    border-radius: 18px;
+    border: 1px solid var(--line);
+    background: var(--bg-surface);
+    display: none;
+    overflow: hidden;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow-subtle);
+  }
+
+  #routeMap.visible { display: block; }
+
+  @media (min-width: 960px) {
+    #routeMap {
+      height: 380px;
+    }
+  }
+
+  .map-status {
+    font-size: 12px;
+    color: var(--text-muted);
+    min-height: 18px;
+    line-height: 1.4;
+    margin-bottom: 16px;
+  }
+
+  /* ---- Counters & Quick Shortcuts ---- */
+  .counter-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .counter-field {
+    flex: 1;
+    background: var(--bg-surface-glass);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 12px 16px;
+  }
+
+  .counter-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 4px;
+  }
+
+  .counter-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: var(--bg-surface-elevated);
+    border: 1px solid var(--line);
+    color: var(--text);
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+
+  .counter-btn:hover {
+    border-color: var(--brand-blue-glow);
+    color: var(--brand-blue-glow);
+    background: var(--brand-blue-soft);
+  }
+
+  .counter-btn:active { transform: scale(0.92); }
+  .counter-val { font-family: var(--font-heading); font-weight: 700; font-size: 18px; }
+
+  .quick-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+
+  .quick-tags button {
+    background: var(--bg-surface);
+    border: 1px solid var(--line);
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 8px 14px;
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .quick-tags button:hover {
+    border-color: var(--brand-blue-glow);
+    color: var(--text);
+    background: var(--brand-blue-soft);
+    transform: translateY(-1px);
+  }
+
+  /* ---- Screen 2: Trip Strip & Cards ---- */
+  .trip-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-surface-glass);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+  }
+
+  .trip-strip .from-to {
+    font-family: var(--font-heading);
+    color: var(--text);
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  .trip-strip .meta {
+    color: var(--text-muted);
+    font-size: 12.5px;
+    display: flex;
+    gap: 16px;
+    margin-top: 4px;
+  }
+
+  /* ---- AI Explanation Cards ---- */
+  .ai-suggest-card {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(6, 182, 212, 0.08));
+    border: 1px solid rgba(59, 130, 246, 0.35);
+    border-radius: 16px;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .ai-suggest-icon { font-size: 22px; line-height: 1.2; flex-shrink: 0; }
+  .ai-suggest-title {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 13.5px;
+    color: var(--brand-blue-glow);
+    margin-bottom: 4px;
+  }
+  .ai-suggest-text { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+
+  /* ---- Vehicle List ---- */
+  .car-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .car-option {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--bg-surface-glass);
+    border: 1.5px solid var(--line);
+    border-radius: 18px;
+    padding: 16px 18px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+  }
+
+  .car-option:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    background: var(--bg-surface-elevated);
+    transform: translateY(-2px);
+  }
+
+  .car-option.selected {
+    border-color: var(--brand-blue-glow);
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.14), rgba(234, 88, 12, 0.05));
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.2);
+  }
+
+  .car-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: var(--bg-surface-elevated);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 1px solid var(--line);
+  }
+
+  .car-icon svg { width: 30px; height: 30px; color: var(--text-secondary); }
+  .car-option.selected .car-icon svg { color: var(--brand-blue-glow); }
+
+  .car-info { flex: 1; }
+  .car-info .name {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--text);
+  }
+  .car-info .sub { color: var(--text-muted); font-size: 12px; margin-top: 3px; }
+
+  .ai-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #070B14;
+    background: linear-gradient(135deg, #FDE047, #F59E0B);
+    padding: 3px 9px;
+    border-radius: 9999px;
+    margin-top: 6px;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+  }
+
+  .car-price { text-align: right; }
+  .car-price .amt {
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 18px;
+    color: var(--text);
+  }
+  .car-price .eta { color: var(--text-muted); font-size: 11.5px; margin-top: 3px; }
+
+  /* ---- Payment Grid ---- */
+  .section-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin: 8px 0 12px;
+  }
+
+  .payment-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .payment-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg-surface-glass);
+    border: 1.5px solid var(--line);
+    border-radius: 14px;
+    padding: 12px 14px;
+    cursor: pointer;
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    transition: all 0.2s ease;
+  }
+
+  .payment-option:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    background: var(--bg-surface-elevated);
+  }
+
+  .payment-option.selected {
+    border-color: var(--brand-blue-glow);
+    background: var(--brand-blue-soft);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+  }
+
+  .payment-option .pay-icon { font-size: 18px; flex-shrink: 0; }
+  .payment-option .pay-name { flex: 1; font-weight: 500; }
+  .payment-option .pay-check {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 1.5px solid var(--line);
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+
+  .payment-option.selected .pay-check {
+    border-color: var(--brand-blue-glow);
+    background: var(--brand-blue-glow);
+    box-shadow: inset 0 0 0 2px #FFFFFF;
+  }
+
+  /* ---- Screen 3: Confirmation & Active Ride HUD ---- */
+  .success-mark {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background: rgba(16, 185, 129, 0.14);
+    border: 1.5px solid rgba(16, 185, 129, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 8px auto 16px;
+    box-shadow: 0 0 24px rgba(16, 185, 129, 0.25);
+  }
+  .success-mark svg { width: 34px; height: 34px; color: var(--emerald); }
+
+  .confirm-title {
+    text-align: center;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 22px;
+    margin-bottom: 4px;
+  }
+
+  .confirm-sub {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+
+  .driver-card {
+    background: var(--bg-surface-glass);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 18px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow-subtle);
+  }
+
+  .driver-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--brand-blue), var(--brand-orange));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 20px;
+    color: #FFFFFF;
+    flex-shrink: 0;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  }
+
+  .driver-meta .dname { font-family: var(--font-heading); font-weight: 700; font-size: 16px; }
+  .driver-meta .dsub { color: var(--text-muted); font-size: 12.5px; margin-top: 3px; }
+
+  .otp-box {
+    margin-left: auto;
+    text-align: center;
+    background: var(--bg-surface-elevated);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 8px 14px;
+  }
+  .otp-box .lbl { font-size: 9px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; }
+  .otp-box .val {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: 0.12em;
+    color: var(--brand-orange-glow);
+  }
+
+  /* ---- Safety Panel ---- */
+  .safety-panel {
+    background: var(--bg-surface-glass);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+  }
+
+  .safety-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .safety-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--text-muted);
+  }
+
+  .safety-dot.ok {
+    background: var(--emerald);
+    box-shadow: 0 0 10px var(--emerald);
+    animation: safetyPulse 2s infinite;
+  }
+
+  .safety-dot.alert {
+    background: var(--danger);
+    box-shadow: 0 0 12px var(--danger);
+    animation: safetyPulse 0.9s infinite;
+  }
+
+  @keyframes safetyPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.15); }
+  }
+
+  .safety-sub {
+    color: var(--text-muted);
+    font-size: 12.5px;
+    margin-top: 6px;
+    line-height: 1.45;
+  }
+
+  #alertContactBtn {
+    margin-top: 14px;
+    width: 100%;
+    border-color: rgba(239, 68, 68, 0.4);
+    color: var(--danger);
+    background: var(--danger-soft);
+    font-weight: 600;
+  }
+  #alertContactBtn:hover { background: rgba(239, 68, 68, 0.25); }
+
+  /* ---- Fare Card ---- */
+  .fare-card {
+    background: var(--bg-surface-glass);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+  }
+
+  .fare-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13.5px;
+    padding: 6px 0;
+    color: var(--text-secondary);
+  }
+
+  .fare-row.total {
+    border-top: 1px dashed var(--line);
+    margin-top: 8px;
+    padding-top: 14px;
+    color: var(--text);
+    font-weight: 700;
+    font-size: 16px;
+  }
+
+  .fare-row.total span:last-child {
+    font-family: var(--font-heading);
+    font-size: 18px;
+    color: var(--brand-blue-glow);
+  }
+
+  .plate {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-top: 16px;
+  }
+  .plate b {
+    font-family: var(--font-mono);
+    color: var(--text);
+    background: var(--bg-surface-elevated);
+    padding: 4px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+  }
+
+  /* ---- Luxury Dispatch Radar Overlay ---- */
+  .ride-loading-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(7, 11, 20, 0.94);
+    backdrop-filter: blur(18px);
+    overflow: hidden;
+  }
+
+  .ride-loading-overlay.visible {
+    display: flex;
+    animation: overlayFadeIn 0.3s ease;
+  }
+
+  @keyframes overlayFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .rlo-scene {
+    position: relative;
+    width: 320px;
+    height: 320px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .rlo-sun {
+    position: absolute;
+    width: 240px;
+    height: 240px;
+    border-radius: 50%;
+    border: 1px dashed rgba(59, 130, 246, 0.3);
+    animation: radarSpin 6s linear infinite;
+  }
+
+  .rlo-sun::before {
+    content: '';
+    position: absolute;
+    inset: 20px;
+    border-radius: 50%;
+    border: 1px solid rgba(249, 115, 22, 0.25);
+  }
+
+  .rlo-sun::after {
+    content: '';
+    position: absolute;
+    inset: 50px;
+    border-radius: 50%;
+    border: 1px solid rgba(59, 130, 246, 0.4);
+  }
+
+  @keyframes radarSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .rlo-cloud { display: none; }
+  .rlo-road { display: none; }
+
+  .rlo-car {
+    position: relative;
+    width: 100px;
+    z-index: 10;
+    animation: carFloat 2s ease-in-out infinite;
+  }
+
+  @keyframes carFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  .rlo-car svg {
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(0 10px 18px rgba(59, 130, 246, 0.5));
+  }
+
+  .rlo-wheel { animation: wheelSpin 0.5s linear infinite; transform-origin: center; }
+  @keyframes wheelSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .rlo-text {
+    margin-top: 32px;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--text);
+    letter-spacing: -0.2px;
+    text-align: center;
+    z-index: 10;
+  }
+
+  .rlo-text .dots span {
+    animation: dotBlink 1.4s infinite;
+    opacity: 0;
+  }
+  .rlo-text .dots span:nth-child(2) { animation-delay: 0.2s; }
+  .rlo-text .dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes dotBlink { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+
+  /* ---- Floating AI Support Chat Widget ---- */
+  .ai-chat-fab {
+    position: fixed;
+    right: 24px;
+    bottom: 28px;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 255, 255, 0.2);
+    background: linear-gradient(135deg, var(--brand-blue), #1E40AF);
+    color: #FFFFFF;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 10px 28px rgba(37, 99, 235, 0.45);
+    z-index: 500;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .ai-chat-fab:hover {
+    transform: scale(1.08) translateY(-2px);
+    box-shadow: 0 14px 34px rgba(37, 99, 235, 0.55);
+  }
+
+  .ai-chat-panel {
+    position: fixed;
+    right: 24px;
+    bottom: 98px;
+    width: 360px;
+    max-width: calc(100vw - 48px);
+    height: 480px;
+    max-height: 75vh;
+    background: var(--bg-surface-glass);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 600;
+  }
+
+  .ai-chat-panel.open { display: flex; animation: chatOpen 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+
+  @keyframes chatOpen {
+    from { opacity: 0; transform: translateY(12px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .ai-chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 18px;
+    background: var(--bg-surface-elevated);
+    border-bottom: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+
+  .ai-chat-title {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 14.5px;
+    color: var(--text);
+  }
+
+  .ai-chat-sub {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    margin-top: 1px;
+  }
+
+  .ai-chat-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px;
+    transition: color 0.2s;
+  }
+  .ai-chat-close:hover { color: var(--text); }
+
+  .ai-chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .chat-msg {
+    max-width: 85%;
+    padding: 10px 14px;
+    border-radius: 16px;
+    font-size: 13px;
+    line-height: 1.45;
+    white-space: pre-wrap;
+  }
+
+  .chat-msg.user {
+    align-self: flex-end;
+    background: linear-gradient(135deg, var(--brand-blue), #1D4ED8);
+    color: #FFFFFF;
+    border-bottom-right-radius: 4px;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+  }
+
+  .chat-msg.bot {
+    align-self: flex-start;
+    background: var(--bg-surface-elevated);
+    border: 1px solid var(--line);
+    color: var(--text);
+    border-bottom-left-radius: 4px;
+  }
+
+  .chat-msg.emergency {
+    align-self: flex-start;
+    background: var(--danger-soft);
+    border: 1px solid var(--danger);
+    color: var(--text);
+  }
+
+  .chat-msg.typing { color: var(--text-muted); font-style: italic; }
+
+  .ai-chat-input-row {
+    display: flex;
+    gap: 8px;
+    padding: 12px 14px;
+    border-top: 1px solid var(--line);
+    background: var(--bg-surface);
+    flex-shrink: 0;
+  }
+
+  .ai-chat-input-row input {
+    flex: 1;
+    background: var(--bg-input);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-size: 13px;
+    outline: none;
+  }
+
+  .ai-chat-input-row input:focus { border-color: var(--brand-blue-glow); }
+
+  .ai-chat-input-row button {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    border: none;
+    background: var(--brand-blue);
+    color: #FFFFFF;
+    cursor: pointer;
+    font-size: 15px;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+
+  .ai-chat-input-row button:hover { background: var(--brand-blue-glow); }
+
+  .ai-chat-emergency-hint {
+    font-size: 10.5px;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 8px 12px 10px;
+    border-top: 1px dashed var(--line);
+    flex-shrink: 0;
+  }
+  .ai-chat-emergency-hint b { color: var(--danger); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Top Navigation Bar -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">
+        <img src="logo-icon.png" alt="go_travels icon">
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">go_travels</span>
+        <span class="brand-tagline">AI Mobility Platform</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="step-dots">
+        <span class="dot" data-step="1"></span>
+        <span class="dot" data-step="2"></span>
+        <span class="dot" data-step="3"></span>
+        <span class="dot" data-step="4"></span>
+        <span class="dot" data-step="5"></span>
+      </div>
+      <button class="logout-btn" id="logoutBtn" title="Log out" style="display:none;" aria-label="Log out">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Live Traffic/Demand Conditions Ribbon -->
+  <div class="traffic-badge" id="trafficBadge" style="display:none;">
+    <span class="tb-dot" id="tbDot"></span>
+    <span id="tbText">Loading live conditions…</span>
+  </div>
+
+  <main>
+
+    <!-- SCREEN 0a: Login / Sign up -->
+    <section class="screen" id="screen-login">
+      <div class="auth-container">
+        <img src="logo-full.png" alt="go_travels" class="hero-logo">
+        <p class="hero-tagline">AI-Powered Luxury Travel Partner</p>
+        
+        <h1 class="page-title" style="text-align:center;">Welcome to <span class="grad-text">Go Travels</span></h1>
+        <p class="page-sub" style="text-align:center; margin-left:auto; margin-right:auto;">Experience intelligent, reliable cab booking tailored for Chennai and beyond.</p>
+
+        <div class="auth-tabs">
+          <button type="button" class="tab-btn active" id="tabExisting">I have an account</button>
+          <button type="button" class="tab-btn" id="tabNew">New here</button>
+        </div>
+
+        <div class="auth-card">
+          <!-- Existing user: phone only -->
+          <div class="auth-panel active" id="panelExisting">
+            <div class="phone-field">
+              <span class="code">+91</span>
+              <div class="field">
+                <label for="existingPhone">Mobile number</label>
+                <input type="tel" id="existingPhone" placeholder="Enter 10-digit mobile number" inputmode="numeric" maxlength="10">
+              </div>
+            </div>
+            <p class="auth-hint">Enter your mobile number to sign in with instant OTP.</p>
+          </div>
+
+          <!-- New user: name + phone -->
+          <div class="auth-panel" id="panelNew">
+            <div class="field">
+              <label for="newName">Full name</label>
+              <input type="text" id="newName" placeholder="e.g. Arnav Sharma">
+            </div>
+            <div class="phone-field">
+              <span class="code">+91</span>
+              <div class="field">
+                <label for="newPhone">Mobile number</label>
+                <input type="tel" id="newPhone" placeholder="Enter 10-digit mobile number" inputmode="numeric" maxlength="10">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-primary" id="sendOtpBtn" disabled>
+          Send OTP
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- SCREEN 0b: OTP verification -->
+    <section class="screen" id="screen-otp">
+      <div class="auth-container">
+        <button class="back-link" id="backToLogin">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          Change number
+        </button>
+
+        <h1 class="page-title" style="text-align:center;">Verify your number</h1>
+        <p class="otp-target">Enter the 4-digit code sent to <b id="otpTargetPhone">+91 XXXXXXXXXX</b></p>
+
+        <div class="otp-digits">
+          <input class="otp-digit" id="otp0" maxlength="1" inputmode="numeric" type="tel" aria-label="Digit 1">
+          <input class="otp-digit" id="otp1" maxlength="1" inputmode="numeric" type="tel" aria-label="Digit 2">
+          <input class="otp-digit" id="otp2" maxlength="1" inputmode="numeric" type="tel" aria-label="Digit 3">
+          <input class="otp-digit" id="otp3" maxlength="1" inputmode="numeric" type="tel" aria-label="Digit 4">
+        </div>
+        <div class="otp-error-msg" id="otpErrorMsg"></div>
+
+        <div class="otp-demo-hint">
+          Demo verification code: <b id="demoOtpValue">----</b>
+        </div>
+
+        <div class="resend-row">
+          Didn't receive code? <button type="button" id="resendOtpBtn">Resend code</button>
+        </div>
+
+        <button class="btn-primary" id="verifyOtpBtn" disabled>
+          Verify &amp; continue
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- SCREEN 1: Pickup & Drop Booking Studio -->
+    <section class="screen" id="screen-1">
+      <p class="auth-hint" id="userGreeting" style="margin-bottom:8px; font-weight:600; color:var(--brand-blue-glow);"></p>
+      <h1 class="page-title">Where is your <span class="grad-text">ride taking you?</span></h1>
+      <p class="page-sub">Specify locations, passengers and luggage. Our neural pricing model and AI assistant configure the optimal ride.</p>
+
+      <div class="layout-grid">
+        <!-- Main Form Column -->
+        <div class="layout-col">
+          <!-- Voice & NLP Command Bar -->
+          <div class="nl-command-card">
+            <label for="nlCommand">AI Booking Assistant &amp; Voice Dispatch</label>
+            <div class="nl-command-row">
+              <input type="text" id="nlCommand" placeholder='e.g. "Book a cab from VIT Chennai to Airport tomorrow at 6pm, 2 bags"'>
+              <button type="button" id="micBtn" title="Speak your booking request" aria-label="Speak your booking request">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+              </button>
+              <button type="button" id="nlCommandBtn" title="Submit command to AI" aria-label="Submit command">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+              </button>
+            </div>
+            <p class="nl-command-status" id="nlCommandStatus"></p>
+          </div>
+
+          <!-- Pickup & Drop Interactive Inputs -->
+          <div class="route-card">
+            <div class="route-row">
+              <div class="route-track">
+                <div class="dot-pickup"></div>
+                <div class="connector"></div>
+                <div class="dot-drop"></div>
+              </div>
+              <div class="route-inputs">
+                <div class="field" style="position:relative;">
+                  <label for="pickup">Pickup point</label>
+                  <input type="text" id="pickup" placeholder="e.g. VIT Chennai, Vandalur" autocomplete="off">
+                  <div class="suggest-list" id="pickupSuggest"></div>
+                </div>
+                <div class="field" style="position:relative;">
+                  <label for="drop">Drop point</label>
+                  <input type="text" id="drop" placeholder="e.g. Chennai Central Railway Station" autocomplete="off">
+                  <div class="suggest-list" id="dropSuggest"></div>
+                </div>
+              </div>
+            </div>
+            <div class="swap-btn" id="swapBtn" title="Swap pickup and drop" role="button" aria-label="Swap locations">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 8h13M7 8l4-4M7 8l4 4M17 16H4M17 16l-4-4M17 16l-4 4"/></svg>
+            </div>
+          </div>
+
+          <!-- Passenger & Luggage Steppers -->
+          <div class="counter-row">
+            <div class="counter-field">
+              <label>Passengers</label>
+              <div class="counter-controls">
+                <button type="button" class="counter-btn" data-counter="members" data-dir="-1" aria-label="Decrease passengers">−</button>
+                <span class="counter-val" id="membersVal">1</span>
+                <button type="button" class="counter-btn" data-counter="members" data-dir="1" aria-label="Increase passengers">+</button>
+              </div>
+            </div>
+            <div class="counter-field">
+              <label>Luggage bags</label>
+              <div class="counter-controls">
+                <button type="button" class="counter-btn" data-counter="luggage" data-dir="-1" aria-label="Decrease luggage">−</button>
+                <span class="counter-val" id="luggageVal">0</span>
+                <button type="button" class="counter-btn" data-counter="luggage" data-dir="1" aria-label="Increase luggage">+</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fast Location Chips -->
+          <div class="quick-tags">
+            <button type="button" data-fill-pickup="Home">📍 Home</button>
+            <button type="button" data-fill-pickup="VIT Chennai Campus">🎓 Campus</button>
+            <button type="button" data-fill-drop="Chennai Airport">✈️ Airport</button>
+            <button type="button" data-fill-drop="Chennai Central">🚉 Railway Station</button>
+          </div>
+
+          <button class="btn-primary" id="toStep2" disabled>
+            See ride options
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+
+        <!-- Map & Route Telemetry Column -->
+        <div class="layout-col">
+          <div id="routeMap"></div>
+          <p class="map-status" id="mapStatus"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN 2: Vehicle & Payment Selection -->
+    <section class="screen" id="screen-2">
+      <button class="back-link" id="backTo1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        Edit locations
+      </button>
+
+      <h1 class="page-title">Choose your <span class="grad-text">ride &amp; payment</span></h1>
+      <p class="page-sub" id="distanceLine">Calculating distance…</p>
+
+      <div class="layout-grid">
+        <!-- Vehicle List Column -->
+        <div class="layout-col">
+          <div class="trip-strip">
+            <div>
+              <div class="from-to" id="tripFromTo">— to —</div>
+              <div class="meta">
+                <span id="tripDist">— km</span>
+                <span id="tripEta">— mins</span>
+              </div>
+            </div>
+            <div class="dot-drop" style="width:10px;height:10px;"></div>
+          </div>
+
+          <div class="car-list" id="carList"><!-- Populated dynamically by JS --></div>
+        </div>
+
+        <!-- AI Rationale & Payment Column -->
+        <div class="layout-col">
+          <!-- Demand & Pricing AI Card -->
+          <div class="ai-suggest-card" id="demandCard" style="display:none;">
+            <div class="ai-suggest-icon">📈</div>
+            <div>
+              <div class="ai-suggest-title">Demand &amp; Pricing Agent</div>
+              <div class="ai-suggest-text" id="demandText"></div>
+            </div>
+          </div>
+
+          <!-- AI Assistant Car Recommendation Card -->
+          <div class="ai-suggest-card" id="aiSuggestCard" style="display:none;">
+            <div class="ai-suggest-icon">🤖</div>
+            <div>
+              <div class="ai-suggest-title">AI Ride Assistant</div>
+              <div class="ai-suggest-text" id="aiSuggestText"></div>
+            </div>
+          </div>
+
+          <!-- Payment Options Grid -->
+          <p class="section-label">Select Payment Method</p>
+          <div class="payment-grid" id="paymentGrid">
+            <button type="button" class="payment-option" data-payment="upi">
+              <span class="pay-icon">📱</span><span class="pay-name">UPI</span><span class="pay-check"></span>
+            </button>
+            <button type="button" class="payment-option" data-payment="card">
+              <span class="pay-icon">💳</span><span class="pay-name">Card</span><span class="pay-check"></span>
+            </button>
+            <button type="button" class="payment-option" data-payment="cash">
+              <span class="pay-icon">💵</span><span class="pay-name">Cash</span><span class="pay-check"></span>
+            </button>
+            <button type="button" class="payment-option" data-payment="debit">
+              <span class="pay-icon">💳</span><span class="pay-name">Debit Card</span><span class="pay-check"></span>
+            </button>
+            <button type="button" class="payment-option" data-payment="credit">
+              <span class="pay-icon">💳</span><span class="pay-name">Credit Card</span><span class="pay-check"></span>
+            </button>
+            <button type="button" class="payment-option" data-payment="points">
+              <span class="pay-icon">⭐</span><span class="pay-name">Points</span><span class="pay-check"></span>
+            </button>
+          </div>
+
+          <button class="btn-primary" id="toStep3" disabled>
+            Confirm ride
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN 3: Confirmation & Live Trip HUD -->
+    <section class="screen" id="screen-3">
+      <div class="success-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+      </div>
+      <div class="confirm-title">Ride booked successfully!</div>
+      <div class="confirm-sub" id="confirmSub">Your executive driver is on the way.</div>
+
+      <div class="layout-grid">
+        <!-- Chauffeur & Live Safety Column -->
+        <div class="layout-col">
+          <div class="driver-card">
+            <div class="driver-avatar" id="driverInitial">R</div>
+            <div class="driver-meta">
+              <div class="dname" id="driverName">—</div>
+              <div class="dsub" id="driverCar">—</div>
+            </div>
+            <div class="otp-box">
+              <div class="lbl">Ride PIN</div>
+              <div class="val" id="otpVal">----</div>
+            </div>
+          </div>
+
+          <div class="ai-suggest-card" id="driverAiCard" style="display:none;">
+            <div class="ai-suggest-icon">🚦</div>
+            <div>
+              <div class="ai-suggest-title">AI Dispatch Agent</div>
+              <div class="ai-suggest-text" id="driverAiText">Analyzing nearby drivers…</div>
+            </div>
+          </div>
+
+          <div class="safety-panel" id="safetyPanel">
+            <div class="safety-header">
+              <span class="safety-dot" id="safetyDot"></span>
+              <span id="safetyStatusText">Live trip monitoring active</span>
+            </div>
+            <p class="safety-sub" id="safetySub">AI is comparing your driver's live location to the planned route.</p>
+            <button type="button" class="btn-ghost" id="alertContactBtn" style="display:none;">🚨 Alert emergency contact</button>
+          </div>
+        </div>
+
+        <!-- Receipt & Actions Column -->
+        <div class="layout-col">
+          <div class="fare-card">
+            <div class="fare-row"><span id="fareCarName">Car type</span><span id="fareDist">— km</span></div>
+            <div class="fare-row"><span>Base fare</span><span id="fareBase">₹0</span></div>
+            <div class="fare-row"><span>Distance charge</span><span id="fareDistCharge">₹0</span></div>
+            <div class="fare-row" id="fareAiRow" style="display:none;"><span id="fareAiLabel">AI adjustment</span><span id="fareAiVal">—</span></div>
+            <div class="fare-row"><span>Paid via</span><span id="farePayment">—</span></div>
+            <div class="fare-row total"><span>Total fare</span><span id="fareTotal">₹0</span></div>
+          </div>
+
+          <button class="btn-ghost" id="bookAnother" style="width:100%; justify-content:center;">Book another ride</button>
+          <div class="plate">Vehicle registration: <b id="plateNo">TN 09 XX 0000</b></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Luxury Dispatch Animated Overlay -->
+<div class="ride-loading-overlay" id="rideLoadingOverlay">
+  <div class="rlo-scene">
+    <div class="rlo-sun"></div>
+    <div class="rlo-cloud rlo-cloud1"></div>
+    <div class="rlo-cloud rlo-cloud2"></div>
+    <div class="rlo-road"></div>
+    <div class="rlo-car">
+      <svg viewBox="0 0 200 90" xmlns="http://www.w3.org/2000/svg">
+        <path d="M14 62 Q14 40 34 36 L58 36 Q68 20 88 20 L128 20 Q146 20 154 36 L172 36 Q188 38 188 56 L188 62 Z"
+              fill="#2563EB" stroke="#60A5FA" stroke-width="2"/>
+        <path d="M66 36 L78 22 L120 22 L134 36 Z" fill="#93C5FD" opacity="0.8" stroke="#60A5FA" stroke-width="1.5"/>
+        <circle class="rlo-wheel" cx="50" cy="64" r="14" fill="#090F1C" stroke="#3B82F6" stroke-width="2"/>
+        <circle cx="50" cy="64" r="5" fill="#CBD5E1"/>
+        <circle class="rlo-wheel" cx="150" cy="64" r="14" fill="#090F1C" stroke="#3B82F6" stroke-width="2"/>
+        <circle cx="150" cy="64" r="5" fill="#CBD5E1"/>
+        <circle cx="182" cy="46" r="4" fill="#FDBA74"/>
+        <circle cx="16" cy="50" r="3" fill="#EF4444"/>
+      </svg>
+    </div>
+    <div class="rlo-text">Matching with top-rated driver<span class="dots"><span>.</span><span>.</span><span>.</span></span></div>
+  </div>
+</div>
+
+<!-- Floating AI Support Chat Widget -->
+<button type="button" class="ai-chat-fab" id="aiChatFab" title="Ask AI Support" aria-label="Ask AI support">🤖</button>
+
+<div class="ai-chat-panel" id="aiChatPanel">
+  <div class="ai-chat-header">
+    <div>
+      <div class="ai-chat-title">go_travels AI Copilot</div>
+      <div class="ai-chat-sub">24/7 Fares, bookings &amp; safety support</div>
+    </div>
+    <button type="button" class="ai-chat-close" id="aiChatClose" aria-label="Close chat">✕</button>
+  </div>
+  <div class="ai-chat-messages" id="aiChatMessages"></div>
+  <div class="ai-chat-input-row">
+    <input type="text" id="aiChatInput" placeholder="Type your question…" autocomplete="off">
+    <button type="button" id="aiChatSend" aria-label="Send">➤</button>
+  </div>
+  <div class="ai-chat-emergency-hint">🚨 Emergency? Call <b>112</b> (National SOS) or <b>100</b> (Police) immediately.</div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  // ---------- state ----------
+  var state = {
+    pickup: "",
+    drop: "",
+    distanceKm: 0,
+    etaMins: 0,
+    members: 1,
+    luggage: 0,
+    selectedCar: null,
+    paymentMethod: null
+  };
+
+  var authState = {
+    mode: "existing",   // "existing" | "new"
+    name: "",
+    phone: "",
+    demoOtp: ""
+  };
+
+  var CAR_TYPES = [
+    {
+      id: "mini",
+      name: "Mini",
+      sub: "Compact • 4 seats",
+      base: 40,
+      perKm: 8,
+      speedKmh: 22,
+      seats: 4,
+      luggage: 2,
+      icon: '<path d="M4 15l1.4-4.8A2 2 0 0 1 7.3 9h9.4a2 2 0 0 1 1.9 1.2L20 15" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7.5" cy="16" r="1.5" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="16.5" cy="16" r="1.5" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M4 15h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>'
+    },
+    {
+      id: "sedan",
+      name: "Sedan",
+      sub: "Comfort • 4 seats",
+      base: 60,
+      perKm: 11,
+      speedKmh: 25,
+      seats: 4,
+      luggage: 3,
+      icon: '<path d="M3 15l1.2-4.5A2.4 2.4 0 0 1 6.5 9h11a2.4 2.4 0 0 1 2.3 1.5L21 15" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 9l1.6-3.2A2 2 0 0 1 9.4 5h5.2a2 2 0 0 1 1.8 1.1L18 9" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7" cy="16" r="1.5" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="17" cy="16" r="1.5" stroke="currentColor" stroke-width="1.8" fill="none"/>'
+    },
+    {
+      id: "suv",
+      name: "SUV",
+      sub: "Spacious • 6 seats",
+      base: 80,
+      perKm: 14,
+      speedKmh: 24,
+      seats: 6,
+      luggage: 5,
+      icon: '<path d="M2.5 15.5l1.3-5.5A2.3 2.3 0 0 1 6 8.2h12a2.3 2.3 0 0 1 2.2 1.7l1.3 5.6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 8.2l1.3-2.6A2 2 0 0 1 8.6 4.5h6.8a2 2 0 0 1 1.8 1.1l1.3 2.6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.8" cy="16.2" r="1.6" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="17.2" cy="16.2" r="1.6" stroke="currentColor" stroke-width="1.8" fill="none"/>'
+    },
+    {
+      id: "primesuv",
+      name: "Prime SUV",
+      sub: "Premium • 6 seats • top-rated drivers",
+      base: 120,
+      perKm: 18,
+      speedKmh: 24,
+      seats: 6,
+      luggage: 5,
+      icon: '<path d="M2.5 15.5l1.3-5.5A2.3 2.3 0 0 1 6 8.2h12a2.3 2.3 0 0 1 2.2 1.7l1.3 5.6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 8.2l1.3-2.6A2 2 0 0 1 8.6 4.5h6.8a2 2 0 0 1 1.8 1.1l1.3 2.6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.8" cy="16.2" r="1.6" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="17.2" cy="16.2" r="1.6" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M12 2.4l.6 1.3 1.4.2-1 1 .25 1.4L12 4.6l-1.25.7.25-1.4-1-1 1.4-.2z" fill="currentColor"/>'
+    }
+  ];
+
+  // ---------- Agentic layer: driver reliability + demand prediction ----------
+  var DRIVER_POOL = [
+    { name:"Suresh Kumar", rating:4.8, baseCancelRate:0.04, vehicles:["mini","sedan"] },
+    { name:"Arjun Nair",   rating:4.6, baseCancelRate:0.07, vehicles:["sedan","suv"] },
+    { name:"Vignesh R",    rating:4.9, baseCancelRate:0.02, vehicles:["mini","sedan","suv"] },
+    { name:"Karthik S",    rating:4.3, baseCancelRate:0.12, vehicles:["suv","primesuv"] },
+    { name:"Manoj T",      rating:4.7, baseCancelRate:0.05, vehicles:["primesuv","suv"] },
+    { name:"Praveen M",    rating:4.4, baseCancelRate:0.09, vehicles:["mini","sedan"] },
+    { name:"Sathish V",    rating:4.85,baseCancelRate:0.03, vehicles:["sedan","suv"] },
+    { name:"Dinesh K",     rating:4.2, baseCancelRate:0.15, vehicles:["mini"] }
+  ];
+
+  function predictCancellationRisk(driver, context){
+    var risk = driver.baseCancelRate * 100;
+    if(context.distanceKm < 2) risk += 6;
+    if(context.distanceKm > 20) risk += 8;
+    if(context.paymentMethod === "cash") risk += 5;
+    if(context.demandLevel === "High") risk += 7;
+    return Math.max(2, Math.min(95, Math.round(risk)));
+  }
+
+  function assignReliableDriver(vehicleId, context){
+    var pool = DRIVER_POOL.filter(function(d){ return d.vehicles.indexOf(vehicleId) !== -1; });
+    if(!pool.length) pool = DRIVER_POOL.slice();
+    var scored = pool.map(function(d){
+      var risk = predictCancellationRisk(d, context);
+      return { driver:d, risk:risk, reliability: 100 - risk };
+    });
+    scored.sort(function(a, b){
+      if(b.reliability !== a.reliability) return b.reliability - a.reliability;
+      return b.driver.rating - a.driver.rating;
+    });
+    return scored[0];
+  }
+
+  function predictDemand(pickupText){
+    var hour = new Date().getHours();
+    var level = "Low";
+    if((hour >= 7 && hour <= 10) || (hour >= 17 && hour <= 21)) level = "High";
+    else if((hour >= 11 && hour <= 16) || hour >= 22 || hour <= 1) level = "Medium";
+
+    var h = hashString((pickupText || "").trim().toLowerCase());
+    if(level === "Low" && h % 5 === 0) level = "Medium";
+
+    var surgeMap = { Low: 1.0, Medium: 1.15, High: 1.4 };
+    var waitSavedMap = { Low: 0, Medium: 1, High: 3 };
+    return { level: level, surge: surgeMap[level], waitSavedMins: waitSavedMap[level] };
+  }
+
+  async function fetchAgentExplanation(task, context, targetEl){
+    try{
+      var res = await fetch("/api/agent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ task: task, context: context })
+      });
+      var data = await res.json();
+      if(data && data.explanation) targetEl.textContent = data.explanation;
+    }catch(err){
+      // keep the fallback heuristic text
+    }
+  }
+
+  function hashString(str){
+    var h = 0;
+    for(var i=0;i<str.length;i++){
+      h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
+    }
+    return Math.abs(h);
+  }
+
+  function computeDistance(pickup, drop){
+    var h = hashString(pickup.trim().toLowerCase() + "|" + drop.trim().toLowerCase());
+    var km = 2.5 + (h % 2550) / 100;
+    return Math.round(km * 10) / 10;
+  }
+
+  function haversineKm(a, b){
+    var R = 6371;
+    var dLat = (b.lat - a.lat) * Math.PI / 180;
+    var dLng = (b.lng - a.lng) * Math.PI / 180;
+    var lat1 = a.lat * Math.PI / 180;
+    var lat2 = b.lat * Math.PI / 180;
+    var h = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    var c = 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+    return R * c;
+  }
+
+  // ---------- Live map + real distance (Leaflet + OSM Nominatim + OSRM) ----------
+  var routeMapEl = document.getElementById("routeMap");
+  var mapStatusEl = document.getElementById("mapStatus");
+  var leafletMap = null;
+  var routeLine = null;
+  var pickupMarker = null;
+  var dropMarker = null;
+
+  function ensureMapInit(){
+    if(leafletMap) return;
+    leafletMap = L.map("routeMap", { zoomControl:false, attributionControl:false });
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(leafletMap);
+    leafletMap.setView([13.0827, 80.2707], 11);
+  }
+
+  async function geocodePlace(query){
+    var chennaiBox = "79.6,13.35,80.5,12.6";
+    var url = "https://nominatim.openstreetmap.org/search" +
+      "?format=json&limit=1&addressdetails=1" +
+      "&countrycodes=in" +
+      "&viewbox=" + chennaiBox + "&bounded=1" +
+      "&q=" + encodeURIComponent(query);
+    var res = await fetch(url);
+    var data = await res.json();
+    if(!data || !data.length){
+      var url2 = "https://nominatim.openstreetmap.org/search?format=json&limit=1&addressdetails=1&countrycodes=in&q=" + encodeURIComponent(query);
+      var res2 = await fetch(url2);
+      data = await res2.json();
+      if(!data || !data.length) return null;
+    }
+    return {
+      lat: parseFloat(data[0].lat),
+      lng: parseFloat(data[0].lon),
+      matchedName: data[0].display_name
+    };
+  }
+
+  async function fetchRoute(pickupPoint, dropPoint){
+    var res = await fetch("/api/route", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        pickupLat: pickupPoint.lat, pickupLng: pickupPoint.lng,
+        dropLat: dropPoint.lat, dropLng: dropPoint.lng
+      })
+    });
+    if(!res.ok) return null;
+    var data = await res.json();
+    if(!data.coords) return null;
+    return { distanceKm: data.distanceKm, coords: data.coords };
+  }
+
+  function drawMapMarkers(pickupPoint, dropPoint, pathCoords){
+    ensureMapInit();
+    routeMapEl.classList.add("visible");
+    leafletMap.invalidateSize();
+
+    if(routeLine) leafletMap.removeLayer(routeLine);
+    if(pickupMarker) leafletMap.removeLayer(pickupMarker);
+    if(dropMarker) leafletMap.removeLayer(dropMarker);
+
+    var coords = pathCoords || [[pickupPoint.lat, pickupPoint.lng], [dropPoint.lat, dropPoint.lng]];
+    routeLine = L.polyline(coords, {
+      color: "#3B82F6",
+      weight: pathCoords ? 4 : 3,
+      dashArray: pathCoords ? null : "6 8"
+    }).addTo(leafletMap);
+    pickupMarker = L.circleMarker([pickupPoint.lat, pickupPoint.lng], { radius:7, color:"#06B6D4", fillColor:"#06B6D4", fillOpacity:1 })
+      .addTo(leafletMap).bindPopup("Pickup: " + pickupPoint.matchedName);
+    dropMarker = L.circleMarker([dropPoint.lat, dropPoint.lng], { radius:7, color:"#F97316", fillColor:"#F97316", fillOpacity:1 })
+      .addTo(leafletMap).bindPopup("Drop: " + dropPoint.matchedName);
+    leafletMap.fitBounds(routeLine.getBounds(), { padding:[24, 24] });
+  }
+
+  async function computeRealDistanceAndDrawMap(pickup, drop, resolvedPickup, resolvedDrop){
+    mapStatusEl.textContent = "Locating pickup & drop points…";
+    try{
+      var pickupPoint = resolvedPickup || await geocodePlace(pickup);
+      var dropPoint = resolvedDrop || await geocodePlace(drop);
+      if(!pickupPoint || !dropPoint){
+        mapStatusEl.textContent = "Couldn't find one of those places — showing an estimate instead.";
+        return computeDistance(pickup, drop);
+      }
+      state.pickupCoords = { lat: pickupPoint.lat, lng: pickupPoint.lng };
+
+      mapStatusEl.textContent = "Calculating route…";
+      var route = await fetchRoute(pickupPoint, dropPoint);
+      if(!route){
+        var straightKm = haversineKm(pickupPoint, dropPoint);
+        var approxKm = Math.round(straightKm * 1.3 * 10) / 10;
+        drawMapMarkers(pickupPoint, dropPoint, null);
+        var shortP = pickupPoint.matchedName.split(",").slice(0,2).join(",");
+        var shortD = dropPoint.matchedName.split(",").slice(0,2).join(",");
+        mapStatusEl.textContent =
+          "~" + approxKm + " km (approx., live routing unavailable) • matched: " + shortP + " → " + shortD;
+        return approxKm;
+      }
+
+      drawMapMarkers(pickupPoint, dropPoint, route.coords);
+
+      var shortPickup = pickupPoint.matchedName.split(",").slice(0,2).join(",");
+      var shortDrop = dropPoint.matchedName.split(",").slice(0,2).join(",");
+      mapStatusEl.textContent =
+        route.distanceKm + " km by road • matched: " + shortPickup + " → " + shortDrop;
+      return route.distanceKm;
+    }catch(err){
+      mapStatusEl.textContent = "Map lookup failed — showing an estimate instead.";
+      return computeDistance(pickup, drop);
+    }
+  }
+
+  function fmtRupee(n){
+    return "₹" + Math.round(n).toLocaleString("en-IN");
+  }
+
+  // ---------- AI ride assistant ----------
+  function getAIRecommendation(members, luggage){
+    var fitting = CAR_TYPES.filter(function(c){
+      return c.seats >= members && c.luggage >= luggage;
+    });
+
+    if(fitting.length){
+      var cheapest = fitting.slice().sort(function(a, b){ return a._price - b._price; })[0];
+      return { car: cheapest, fits: true };
+    }
+
+    var roomiest = CAR_TYPES.slice().sort(function(a, b){
+      return (b.seats + b.luggage) - (a.seats + a.luggage);
+    })[0];
+    return { car: roomiest, fits: false };
+  }
+
+  // ---------- screen transitions ----------
+  var screens = document.querySelectorAll(".screen");
+  var dots = document.querySelectorAll(".step-dots .dot");
+  var logoutBtn = document.getElementById("logoutBtn");
+
+  var trafficDataReady = false;
+  var currentScreenNum = 1;
+
+  function updateBadgeVisibility(){
+    var badge = document.getElementById("trafficBadge");
+    badge.style.display = (currentScreenNum >= 3 && trafficDataReady) ? "flex" : "none";
+  }
+
+  function goToScreen(n){
+    screens.forEach(function(s, idx){
+      s.classList.remove("active", "leaving");
+      if(idx === n-1){
+        s.classList.add("active");
+      }
+    });
+    dots.forEach(function(d, idx){
+      d.classList.toggle("active", idx === n-1);
+    });
+    logoutBtn.style.display = (n >= 3) ? "flex" : "none";
+    currentScreenNum = n;
+    updateBadgeVisibility();
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+  goToScreen(1);
+
+  // ---------- Live traffic/demand badge (simulation) ----------
+  async function refreshTrafficBadge(){
+    var dot = document.getElementById("tbDot");
+    var text = document.getElementById("tbText");
+    try{
+      var res = await fetch("/api/traffic-status");
+      var data = await res.json();
+      var worseLabel = (data.trafficLabel === "High" || data.demandLabel === "High") ? "high"
+        : (data.trafficLabel === "Moderate" || data.demandLabel === "Moderate") ? "moderate" : "low";
+      dot.className = "tb-dot " + worseLabel;
+      text.textContent = "Live: " + data.trafficLabel + " traffic, " + data.demandLabel + " demand across Chennai" +
+        (data.raining ? " · rain in some areas" : "");
+      trafficDataReady = true;
+    }catch(err){
+      trafficDataReady = false;
+    }
+    updateBadgeVisibility();
+  }
+  refreshTrafficBadge();
+  setInterval(refreshTrafficBadge, 10000);
+
+  // ---------- Auth: login / signup ----------
+  var tabExisting = document.getElementById("tabExisting");
+  var tabNew = document.getElementById("tabNew");
+  var panelExisting = document.getElementById("panelExisting");
+  var panelNew = document.getElementById("panelNew");
+  var existingPhone = document.getElementById("existingPhone");
+  var newName = document.getElementById("newName");
+  var newPhone = document.getElementById("newPhone");
+  var sendOtpBtn = document.getElementById("sendOtpBtn");
+
+  function digitsOnly(v){ return v.replace(/[^0-9]/g, ""); }
+
+  function setAuthTab(mode){
+    authState.mode = mode;
+    tabExisting.classList.toggle("active", mode === "existing");
+    tabNew.classList.toggle("active", mode === "new");
+    panelExisting.classList.toggle("active", mode === "existing");
+    panelNew.classList.toggle("active", mode === "new");
+    validateAuth();
+  }
+  tabExisting.addEventListener("click", function(){ setAuthTab("existing"); });
+  tabNew.addEventListener("click", function(){ setAuthTab("new"); });
+
+  function validateAuth(){
+    var ok;
+    if(authState.mode === "existing"){
+      ok = digitsOnly(existingPhone.value).length === 10;
+    }else{
+      ok = newName.value.trim().length > 1 && digitsOnly(newPhone.value).length === 10;
+    }
+    sendOtpBtn.disabled = !ok;
+  }
+  existingPhone.addEventListener("input", function(){
+    existingPhone.value = digitsOnly(existingPhone.value).slice(0,10);
+    validateAuth();
+  });
+  newPhone.addEventListener("input", function(){
+    newPhone.value = digitsOnly(newPhone.value).slice(0,10);
+    validateAuth();
+  });
+  newName.addEventListener("input", validateAuth);
+
+  function generateDemoOtp(){
+    return String(Math.floor(1000 + Math.random()*9000));
+  }
+
+  function maskPhone(p){
+    return "+91 " + p.slice(0,2) + "XXXXX" + p.slice(7);
+  }
+
+  sendOtpBtn.addEventListener("click", function(){
+    if(authState.mode === "existing"){
+      authState.phone = digitsOnly(existingPhone.value);
+      authState.name = "";
+    }else{
+      authState.phone = digitsOnly(newPhone.value);
+      authState.name = newName.value.trim();
+    }
+    authState.demoOtp = generateDemoOtp();
+    document.getElementById("otpTargetPhone").textContent = maskPhone(authState.phone);
+    document.getElementById("demoOtpValue").textContent = authState.demoOtp;
+    clearOtpBoxes();
+    goToScreen(2);
+    setTimeout(function(){ otpBoxes[0].focus(); }, 350);
+  });
+
+  document.getElementById("backToLogin").addEventListener("click", function(){
+    goToScreen(1);
+  });
+
+  // ---------- OTP screen ----------
+  var otpBoxes = [
+    document.getElementById("otp0"),
+    document.getElementById("otp1"),
+    document.getElementById("otp2"),
+    document.getElementById("otp3")
+  ];
+  var verifyOtpBtn = document.getElementById("verifyOtpBtn");
+  var otpErrorMsg = document.getElementById("otpErrorMsg");
+  var resendOtpBtn = document.getElementById("resendOtpBtn");
+
+  function clearOtpBoxes(){
+    otpBoxes.forEach(function(b){ b.value=""; b.classList.remove("error"); });
+    otpErrorMsg.textContent = "";
+    verifyOtpBtn.disabled = true;
+  }
+
+  function checkOtpFilled(){
+    var val = otpBoxes.map(function(b){ return b.value; }).join("");
+    verifyOtpBtn.disabled = val.length !== 4;
+    return val;
+  }
+
+  otpBoxes.forEach(function(box, idx){
+    box.addEventListener("input", function(){
+      box.value = digitsOnly(box.value).slice(0,1);
+      box.classList.remove("error");
+      otpErrorMsg.textContent = "";
+      if(box.value && idx < otpBoxes.length - 1){
+        otpBoxes[idx+1].focus();
+      }
+      checkOtpFilled();
+    });
+    box.addEventListener("keydown", function(e){
+      if(e.key === "Backspace" && !box.value && idx > 0){
+        otpBoxes[idx-1].focus();
+      }
+    });
+  });
+
+  resendOtpBtn.addEventListener("click", function(){
+    authState.demoOtp = generateDemoOtp();
+    document.getElementById("demoOtpValue").textContent = authState.demoOtp;
+    clearOtpBoxes();
+    otpBoxes[0].focus();
+    resendOtpBtn.disabled = true;
+    resendOtpBtn.textContent = "Sent!";
+    setTimeout(function(){
+      resendOtpBtn.disabled = false;
+      resendOtpBtn.textContent = "Resend code";
+    }, 2500);
+  });
+
+  verifyOtpBtn.addEventListener("click", function(){
+    var entered = checkOtpFilled();
+    if(entered !== authState.demoOtp){
+      otpBoxes.forEach(function(b){ b.classList.add("error"); });
+      otpErrorMsg.textContent = "Incorrect code — please check and try again.";
+      return;
+    }
+    var greeting = document.getElementById("userGreeting");
+    if(authState.name){
+      greeting.textContent = "Welcome, " + authState.name.split(" ")[0] + " • Ready for your journey";
+    }else{
+      greeting.textContent = "Welcome back • +91 " + authState.phone.slice(0,2) + "XXXXX" + authState.phone.slice(7);
+    }
+    recordLogin(authState.phone, authState.name);
+    goToScreen(3);
+  });
+
+  async function recordLogin(phone, name){
+    try{
+      await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: phone, name: name || "" })
+      });
+    }catch(err){
+      // silent
+    }
+  }
+
+  // ---------- Screen 1 logic: route & suggestions ----------
+  var pickupInput = document.getElementById("pickup");
+  var dropInput = document.getElementById("drop");
+  var toStep2Btn = document.getElementById("toStep2");
+  var swapBtn = document.getElementById("swapBtn");
+
+  var resolvedPoints = { pickup: null, drop: null };
+
+  function setupAutocomplete(inputEl, listEl, key){
+    var debounceTimer = null;
+
+    inputEl.addEventListener("input", function(){
+      resolvedPoints[key] = null;
+      var query = inputEl.value.trim();
+      clearTimeout(debounceTimer);
+      if(query.length < 3){
+        listEl.classList.remove("visible");
+        listEl.innerHTML = "";
+        return;
+      }
+      debounceTimer = setTimeout(function(){ runSuggestSearch(query, listEl, inputEl, key); }, 350);
+    });
+
+    inputEl.addEventListener("blur", function(){
+      setTimeout(function(){ listEl.classList.remove("visible"); }, 150);
+    });
+  }
+
+  async function runSuggestSearch(query, listEl, inputEl, key){
+    try{
+      var chennaiBox = "79.6,13.35,80.5,12.6";
+      var url = "https://nominatim.openstreetmap.org/search" +
+        "?format=json&limit=5&addressdetails=1&countrycodes=in" +
+        "&viewbox=" + chennaiBox + "&bounded=1" +
+        "&q=" + encodeURIComponent(query);
+      var res = await fetch(url);
+      var data = await res.json();
+
+      if(!data || !data.length){
+        listEl.innerHTML = '<div class="suggest-empty">No direct matches nearby — you can still type the full name.</div>';
+        listEl.classList.add("visible");
+        return;
+      }
+
+      listEl.innerHTML = "";
+      data.forEach(function(place){
+        var parts = place.display_name.split(",");
+        var main = parts[0];
+        var sub = parts.slice(1,3).join(",").trim();
+        var item = document.createElement("div");
+        item.className = "suggest-item";
+        item.innerHTML = '<span class="s-main">' + main + '</span><span class="s-sub">' + sub + '</span>';
+        item.addEventListener("mousedown", function(e){
+          e.preventDefault();
+          inputEl.value = main + ", " + sub;
+          resolvedPoints[key] = { lat: parseFloat(place.lat), lng: parseFloat(place.lon), matchedName: place.display_name };
+          listEl.classList.remove("visible");
+          validateStep1();
+        });
+        listEl.appendChild(item);
+      });
+      listEl.classList.add("visible");
+    }catch(err){
+      listEl.classList.remove("visible");
+    }
+  }
+
+  setupAutocomplete(pickupInput, document.getElementById("pickupSuggest"), "pickup");
+  setupAutocomplete(dropInput, document.getElementById("dropSuggest"), "drop");
+
+  // ---------- Agentic layer: natural-language booking command ----------
+  var nlCommandInput = document.getElementById("nlCommand");
+  var nlCommandBtn = document.getElementById("nlCommandBtn");
+  var nlCommandStatus = document.getElementById("nlCommandStatus");
+  state.scheduledFor = null;
+
+  async function runNlCommand(){
+    var command = nlCommandInput.value.trim();
+    if(!command) return;
+
+    nlCommandBtn.disabled = true;
+    nlCommandStatus.className = "nl-command-status";
+    nlCommandStatus.textContent = "Processing your request with AI…";
+
+    try{
+      var res = await fetch("/api/parse-booking", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ command: command, now: new Date().toISOString() })
+      });
+      var data = await res.json();
+
+      if(!data || (!data.pickup && !data.drop)){
+        nlCommandStatus.className = "nl-command-status err";
+        nlCommandStatus.textContent = "Couldn't extract locations — please try 'from [Pickup] to [Destination]'.";
+        return;
+      }
+
+      if(data.pickup){
+        pickupInput.value = data.pickup;
+        resolvedPoints.pickup = null;
+      }
+      if(data.drop){
+        dropInput.value = data.drop;
+        resolvedPoints.drop = null;
+      }
+      state.scheduledFor = (data.date || data.time) ? { date: data.date, time: data.time } : null;
+
+      if(data.passengers != null){
+        state.members = Math.min(6, Math.max(1, parseInt(data.passengers, 10) || 1));
+        document.getElementById("membersVal").textContent = state.members;
+      }
+      if(data.luggage != null){
+        state.luggage = Math.min(8, Math.max(0, parseInt(data.luggage, 10) || 0));
+        document.getElementById("luggageVal").textContent = state.luggage;
+      }
+
+      var parts = [];
+      if(data.pickup && data.drop) parts.push(data.pickup + " → " + data.drop);
+      if(data.date) parts.push("on " + data.date);
+      if(data.time) parts.push("at " + data.time);
+      if(data.passengers != null) parts.push(state.members + (state.members===1?" passenger":" passengers"));
+      if(data.luggage != null) parts.push(state.luggage + (state.luggage===1?" bag":" bags"));
+
+      validateStep1();
+
+      if(data.bookIntent && data.pickup && data.drop){
+        nlCommandStatus.className = "nl-command-status ok";
+        nlCommandStatus.textContent = "Understood: " + parts.join(", ") + ". Initiating automatic dispatch…" +
+          (data.source === "fallback" ? " (offline mode)" : "");
+
+        await proceedToCarSelection();
+        await new Promise(function(r){ setTimeout(r, 900); });
+
+        var carRow = document.querySelector('.car-option[data-car="' + state.recommendedCarId + '"]');
+        if(carRow) carRow.click();
+
+        var methodId = data.paymentMethod || "upi";
+        var payBtn = document.querySelector('.payment-option[data-payment="' + methodId + '"]');
+        if(payBtn) payBtn.click();
+
+        await new Promise(function(r){ setTimeout(r, 500); });
+
+        if(!toStep3Btn.disabled){
+          toStep3Btn.click();
+        }
+        return;
+      }
+
+      nlCommandStatus.className = "nl-command-status ok";
+      nlCommandStatus.textContent = "Parsed: " + parts.join(", ") + ". Details populated below — review and continue.";
+    }catch(err){
+      nlCommandStatus.className = "nl-command-status err";
+      nlCommandStatus.textContent = "AI parser connection issue — you can fill the fields manually below.";
+    }finally{
+      nlCommandBtn.disabled = false;
+    }
+  }
+
+  nlCommandBtn.addEventListener("click", runNlCommand);
+  nlCommandInput.addEventListener("keydown", function(e){
+    if(e.key === "Enter"){ e.preventDefault(); runNlCommand(); }
+  });
+
+  // ---------- Voice input ----------
+  var micBtn = document.getElementById("micBtn");
+  var SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if(!SpeechRecognitionCtor){
+    micBtn.disabled = true;
+    micBtn.title = "Voice recognition not supported in this browser — try Chrome";
+  } else {
+    var recognition = new SpeechRecognitionCtor();
+    recognition.lang = "en-IN";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    var isListening = false;
+
+    recognition.onstart = function(){
+      isListening = true;
+      micBtn.classList.add("listening");
+      nlCommandStatus.className = "nl-command-status";
+      nlCommandStatus.textContent = "Listening… speak your destination and ride requirements.";
+    };
+
+    recognition.onresult = function(event){
+      var transcript = event.results[0][0].transcript.trim();
+      nlCommandInput.value = transcript;
+      runNlCommand();
+    };
+
+    recognition.onerror = function(event){
+      nlCommandStatus.className = "nl-command-status err";
+      if(event.error === "not-allowed" || event.error === "service-not-allowed"){
+        nlCommandStatus.textContent = "Microphone access blocked — please enable microphone permissions.";
+      } else if(event.error === "no-speech"){
+        nlCommandStatus.textContent = "No speech detected — tap microphone and try again.";
+      } else {
+        nlCommandStatus.textContent = "Voice input error: " + event.error;
+      }
+    };
+
+    recognition.onend = function(){
+      isListening = false;
+      micBtn.classList.remove("listening");
+    };
+
+    micBtn.addEventListener("click", function(){
+      if(isListening){
+        recognition.stop();
+        return;
+      }
+      try{
+        recognition.start();
+      }catch(err){}
+    });
+  }
+
+  function validateStep1(){
+    var ok = pickupInput.value.trim().length > 1 && dropInput.value.trim().length > 1 &&
+             pickupInput.value.trim().toLowerCase() !== dropInput.value.trim().toLowerCase();
+    toStep2Btn.disabled = !ok;
+  }
+  pickupInput.addEventListener("input", validateStep1);
+  dropInput.addEventListener("input", validateStep1);
+
+  var membersValEl = document.getElementById("membersVal");
+  var luggageValEl = document.getElementById("luggageVal");
+  document.querySelectorAll("[data-counter]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var key = btn.getAttribute("data-counter");
+      var dir = parseInt(btn.getAttribute("data-dir"), 10);
+      var min = key === "members" ? 1 : 0;
+      var max = key === "members" ? 6 : 8;
+      state[key] = Math.min(max, Math.max(min, state[key] + dir));
+      (key === "members" ? membersValEl : luggageValEl).textContent = state[key];
+    });
+  });
+
+  swapBtn.addEventListener("click", function(){
+    var tmp = pickupInput.value;
+    pickupInput.value = dropInput.value;
+    dropInput.value = tmp;
+    var tmpPoint = resolvedPoints.pickup;
+    resolvedPoints.pickup = resolvedPoints.drop;
+    resolvedPoints.drop = tmpPoint;
+    validateStep1();
+  });
+
+  document.querySelectorAll("[data-fill-pickup]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      pickupInput.value = btn.getAttribute("data-fill-pickup");
+      resolvedPoints.pickup = null;
+      validateStep1();
+    });
+  });
+  document.querySelectorAll("[data-fill-drop]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      dropInput.value = btn.getAttribute("data-fill-drop");
+      resolvedPoints.drop = null;
+      validateStep1();
+    });
+  });
+
+  async function proceedToCarSelection(){
+    state.pickup = pickupInput.value.trim();
+    state.drop = dropInput.value.trim();
+    state.selectedCar = null;
+
+    var originalLabel = toStep2Btn.innerHTML;
+    toStep2Btn.disabled = true;
+    toStep2Btn.textContent = "Calculating route & live fares…";
+
+    state.distanceKm = await computeRealDistanceAndDrawMap(state.pickup, state.drop, resolvedPoints.pickup, resolvedPoints.drop);
+
+    toStep2Btn.innerHTML = originalLabel;
+    toStep2Btn.disabled = false;
+
+    await buildCarList();
+    document.getElementById("tripFromTo").textContent = state.pickup + "  →  " + state.drop +
+      (state.scheduledFor ? "  (" + [state.scheduledFor.date, state.scheduledFor.time].filter(Boolean).join(" ") + ")" : "");
+    document.getElementById("tripDist").textContent = state.distanceKm + " km";
+
+    var d = state.demand;
+    var conditionsBits = d.aiPowered
+      ? [d.trafficLabel + " traffic", d.demandLabel + " demand"].concat(d.raining ? ["rain"] : [])
+      : [];
+    document.getElementById("distanceLine").textContent =
+      "Distance: " + state.distanceKm + " km. " +
+      (d.aiPowered
+        ? "AI fare model: " + conditionsBits.join(", ") + " → " + d.surge.toFixed(2) + "x rate."
+        : "Dynamic fare adjusted per vehicle class.");
+    goToScreen(4);
+  }
+  toStep2Btn.addEventListener("click", proceedToCarSelection);
+
+  document.getElementById("backTo1").addEventListener("click", function(){
+    goToScreen(3);
+  });
+
+  // ---------- Screen 2 logic: Car & Payment ----------
+  var carListEl = document.getElementById("carList");
+  var toStep3Btn = document.getElementById("toStep3");
+
+  var paymentNames = {
+    upi: "UPI",
+    card: "Card",
+    cash: "Cash",
+    debit: "Debit Card",
+    credit: "Credit Card",
+    points: "Travel Points"
+  };
+
+  function updateToStep3Availability(){
+    toStep3Btn.disabled = !(state.selectedCar && state.paymentMethod);
+  }
+
+  document.querySelectorAll(".payment-option").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      document.querySelectorAll(".payment-option").forEach(function(el){ el.classList.remove("selected"); });
+      btn.classList.add("selected");
+      state.paymentMethod = btn.getAttribute("data-payment");
+      updateToStep3Availability();
+    });
+  });
+
+  async function buildCarList(){
+    carListEl.innerHTML = "";
+
+    var demand;
+    try{
+      var pf = await fetch("/api/predict-fare", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({
+          distanceKm: state.distanceKm,
+          baseFare: 100,
+          pickupLat: state.pickupCoords ? state.pickupCoords.lat : null,
+          pickupLng: state.pickupCoords ? state.pickupCoords.lng : null
+        })
+      });
+      var pfData = await pf.json();
+      demand = {
+        level: pfData.demandLabel,
+        surge: pfData.multiplier,
+        waitSavedMins: pfData.trafficLabel === "Low" ? 3 : (pfData.trafficLabel === "Moderate" ? 1 : 0),
+        aiPowered: true,
+        trafficLabel: pfData.trafficLabel,
+        demandLabel: pfData.demandLabel,
+        raining: pfData.raining,
+        zone: pfData.zone
+      };
+    }catch(err){
+      demand = predictDemand(state.pickup);
+      demand.aiPowered = false;
+    }
+    state.demand = demand;
+
+    CAR_TYPES.forEach(function(car){
+      var price = (car.base + car.perKm * state.distanceKm) * demand.surge;
+      var etaMins = Math.round((state.distanceKm / car.speedKmh) * 60) + 3 - demand.waitSavedMins;
+      car._price = Math.round(price);
+      car._eta = Math.max(2, etaMins);
+    });
+
+    var rec = getAIRecommendation(state.members, state.luggage);
+    state.recommendedCarId = rec.car.id;
+
+    CAR_TYPES.forEach(function(car){
+      var isRec = car.id === rec.car.id;
+      var row = document.createElement("div");
+      row.className = "car-option";
+      row.setAttribute("data-car", car.id);
+      row.innerHTML =
+        '<div class="car-icon"><svg viewBox="0 0 24 24">' + car.icon + '</svg></div>' +
+        '<div class="car-info">' +
+          '<div class="name">' + car.name + '</div>' +
+          '<div class="sub">' + car.sub + '</div>' +
+          (isRec ? '<div><span class="ai-badge">🤖 AI Match</span></div>' : '') +
+        '</div>' +
+        '<div class="car-price">' +
+          '<div class="amt">' + fmtRupee(car._price) + '</div>' +
+          '<div class="eta">' + car._eta + ' min away</div>' +
+        '</div>';
+
+      row.addEventListener("click", function(){
+        document.querySelectorAll(".car-option").forEach(function(el){ el.classList.remove("selected"); });
+        row.classList.add("selected");
+        state.selectedCar = car;
+        document.getElementById("tripEta").textContent = car._eta + " mins";
+        updateToStep3Availability();
+      });
+
+      carListEl.appendChild(row);
+    });
+
+    var aiCard = document.getElementById("aiSuggestCard");
+    var aiText = document.getElementById("aiSuggestText");
+    var pax = state.members + (state.members === 1 ? " passenger" : " passengers");
+    var bags = state.luggage + (state.luggage === 1 ? " bag" : " bags");
+    if(rec.fits){
+      aiText.textContent =
+        "For " + pax + " and " + bags + ", the " + rec.car.name +
+        " provides the most comfortable, cost-effective fit — " + fmtRupee(rec.car._price) + ".";
+    }else{
+      aiText.textContent =
+        "High passenger/bag volume: For " + pax + " and " + bags + ", the " + rec.car.name +
+        " (" + rec.car.seats + " seats, " + rec.car.luggage + " bags max) may be tight — consider multiple vehicles.";
+    }
+    aiCard.style.display = "flex";
+
+    var demandCard = document.getElementById("demandCard");
+    var demandText = document.getElementById("demandText");
+    demandCard.style.display = "flex";
+    if(demand.surge > 1){
+      demandText.textContent =
+        "Demand in " + (demand.zone || state.pickup) + " is " + demand.level +
+        " (" + demand.surge.toFixed(2) + "x dynamic rate). AI drivers were prepositioned nearby, saving ~" +
+        demand.waitSavedMins + " min wait time.";
+    }else{
+      demandText.textContent =
+        "Demand near " + state.pickup + " is standard (" + demand.level + ") — standard rates apply, and executive chauffeurs are nearby.";
+    }
+    fetchAgentExplanation("demand", {
+      demandLevel: demand.level,
+      surge: demand.surge,
+      waitSavedMins: demand.waitSavedMins,
+      pickup: state.pickup
+    }, demandText);
+
+    var recRow = carListEl.querySelector('[data-car="' + rec.car.id + '"]');
+    if(recRow) recRow.click();
+
+    document.getElementById("tripEta").textContent = rec.car._eta + " mins";
+    state.paymentMethod = null;
+    document.querySelectorAll(".payment-option").forEach(function(el){ el.classList.remove("selected"); });
+  }
+
+  var rideLoadingOverlay = document.getElementById("rideLoadingOverlay");
+
+  // ---------- AI Safety Monitoring ----------
+  var safetyTimer = null;
+
+  function startSafetyMonitoring(){
+    clearInterval(safetyTimer);
+    var dot = document.getElementById("safetyDot");
+    var statusText = document.getElementById("safetyStatusText");
+    var sub = document.getElementById("safetySub");
+    var alertBtn = document.getElementById("alertContactBtn");
+
+    dot.className = "safety-dot ok";
+    statusText.textContent = "Live trip monitoring active";
+    sub.textContent = "AI is comparing your driver's live GPS coordinates to the planned route telemetry.";
+    alertBtn.style.display = "none";
+
+    var ticks = 0;
+    safetyTimer = setInterval(function(){
+      ticks++;
+      if(ticks > 6){ clearInterval(safetyTimer); return; }
+      if(Math.random() < 0.18){
+        dot.className = "safety-dot alert";
+        statusText.textContent = "Route deviation detected";
+        sub.textContent = "Your vehicle has moved off the expected route. AI safety protocol has flagged this trip.";
+        alertBtn.style.display = "inline-block";
+        fetchAgentExplanation("safety", { deviation:true, distanceKm: state.distanceKm }, sub);
+        clearInterval(safetyTimer);
+      }
+    }, 4000);
+  }
+
+  document.getElementById("alertContactBtn").addEventListener("click", function(){
+    window.alert("Emergency Protocol Activated: Emergency contacts have been notified with live vehicle location.");
+  });
+
+  toStep3Btn.addEventListener("click", function(){
+    if(!state.selectedCar || !state.paymentMethod) return;
+    var car = state.selectedCar;
+    var distCharge = Math.round(car.perKm * state.distanceKm);   // plain distance charge, before any dynamic adjustment
+    var demand = state.demand || predictDemand(state.pickup);
+
+    var assignment = assignReliableDriver(car.id, {
+      distanceKm: state.distanceKm,
+      paymentMethod: state.paymentMethod,
+      demandLevel: demand.level
+    });
+    var driver = assignment.driver;
+
+    document.getElementById("confirmSub").textContent =
+      car.name + " confirmed for your journey to " + state.drop + ".";
+    document.getElementById("driverName").textContent = driver.name;
+    document.getElementById("driverInitial").textContent = driver.name.charAt(0);
+    document.getElementById("driverCar").textContent = car.name + " • arriving in " + car._eta + " min";
+    document.getElementById("otpVal").textContent = String(Math.floor(1000 + Math.random()*9000));
+    document.getElementById("plateNo").textContent =
+      "TN " + (10 + Math.floor(Math.random()*80)) + " " +
+      String.fromCharCode(65+Math.floor(Math.random()*26)) + String.fromCharCode(65+Math.floor(Math.random()*26)) +
+      " " + Math.floor(1000 + Math.random()*8999);
+
+    document.getElementById("fareCarName").textContent = car.name + " · trip distance";
+    document.getElementById("fareDist").textContent = state.distanceKm + " km";
+    document.getElementById("fareBase").textContent = fmtRupee(car.base);
+    document.getElementById("fareDistCharge").textContent = fmtRupee(distCharge);
+
+    var fareAiRow = document.getElementById("fareAiRow");
+    // Adjustment amount = whatever is left so that base + distance + adjustment always equals the total shown
+    var adjAmount = car._price - car.base - distCharge;
+    if(demand && demand.surge !== 1 && adjAmount !== 0){
+      var pct = Math.round((demand.surge - 1) * 100);
+      var adjLabel = "Dynamic adjustment";
+      if(state.demand && state.demand.aiPowered && state.demand.trafficLabel){
+        adjLabel += " (" + state.demand.trafficLabel + " traffic, " + state.demand.demandLabel + " demand, " + (pct >= 0 ? "+" : "") + pct + "%)";
+      } else {
+        adjLabel += " (" + (pct >= 0 ? "+" : "") + pct + "%)";
+      }
+      document.getElementById("fareAiLabel").textContent = adjLabel;
+      document.getElementById("fareAiVal").textContent = (adjAmount >= 0 ? "+" : "-") + fmtRupee(Math.abs(adjAmount));
+      fareAiRow.style.display = "flex";
+    } else {
+      fareAiRow.style.display = "none";
+    }
+
+    document.getElementById("farePayment").textContent = paymentNames[state.paymentMethod] || "—";
+    document.getElementById("fareTotal").textContent = fmtRupee(car._price);
+
+    var driverCard = document.getElementById("driverAiCard");
+    var driverText = document.getElementById("driverAiText");
+    driverCard.style.display = "flex";
+    driverText.textContent =
+      driver.name + " assigned — predicted " + assignment.reliability +
+      "% reliable (low cancellation probability) among nearby " + car.name + " fleet. Demand nearby is " +
+      demand.level + ", with optimized chauffeur routing.";
+    fetchAgentExplanation("driver-assignment", {
+      driverName: driver.name,
+      reliability: assignment.reliability,
+      rating: driver.rating,
+      demandLevel: demand.level,
+      waitSavedMins: demand.waitSavedMins,
+      distanceKm: state.distanceKm
+    }, driverText);
+
+    startSafetyMonitoring();
+
+    rideLoadingOverlay.classList.add("visible");
+    setTimeout(function(){
+      rideLoadingOverlay.classList.remove("visible");
+      goToScreen(5);
+    }, 1800);
+  });
+
+  document.getElementById("bookAnother").addEventListener("click", function(){
+    clearInterval(safetyTimer);
+    pickupInput.value = "";
+    dropInput.value = "";
+    resolvedPoints.pickup = null;
+    resolvedPoints.drop = null;
+    state = {pickup:"", drop:"", distanceKm:0, etaMins:0, members:1, luggage:0, selectedCar:null, paymentMethod:null};
+    membersValEl.textContent = "1";
+    luggageValEl.textContent = "0";
+    document.querySelectorAll(".payment-option").forEach(function(el){ el.classList.remove("selected"); });
+    routeMapEl.classList.remove("visible");
+    mapStatusEl.textContent = "";
+    toStep2Btn.disabled = true;
+    goToScreen(3);
+  });
+
+  // ---------- Logout ----------
+  logoutBtn.addEventListener("click", function(){
+    var confirmLogout = window.confirm("Log out of go_travels?");
+    if(!confirmLogout) return;
+    clearInterval(safetyTimer);
+
+    pickupInput.value = "";
+    dropInput.value = "";
+    resolvedPoints.pickup = null;
+    resolvedPoints.drop = null;
+    state = {pickup:"", drop:"", distanceKm:0, etaMins:0, members:1, luggage:0, selectedCar:null, paymentMethod:null};
+    membersValEl.textContent = "1";
+    luggageValEl.textContent = "0";
+    document.querySelectorAll(".payment-option").forEach(function(el){ el.classList.remove("selected"); });
+    routeMapEl.classList.remove("visible");
+    mapStatusEl.textContent = "";
+    toStep2Btn.disabled = true;
+
+    authState = { mode: "existing", name: "", phone: "", demoOtp: "" };
+    existingPhone.value = "";
+    newPhone.value = "";
+    newName.value = "";
+    setAuthTab("existing");
+    clearOtpBoxes();
+
+    goToScreen(1);
+  });
+
+})();
+</script>
+
+<script>
+// ---------- AI support chat widget (talks to /api/support-chat, backed by Groq) ----------
+(function(){
+  "use strict";
+
+  var fab = document.getElementById("aiChatFab");
+  var panel = document.getElementById("aiChatPanel");
+  var closeBtn = document.getElementById("aiChatClose");
+  var messagesEl = document.getElementById("aiChatMessages");
+  var inputEl = document.getElementById("aiChatInput");
+  var sendBtn = document.getElementById("aiChatSend");
+  var chatHistory = [];
+
+  var EMERGENCY_KEYWORDS = [
+    "emergency", "accident", "unsafe", "danger", "sos", "help me",
+    "assault", "harass", "police", "threat", "kidnap", "attacked",
+    "stranded", "robbed", "scared", "following me"
+  ];
+  var EMERGENCY_REPLY =
+    "🚨 If you're in immediate danger, call 112 (India's National Emergency Number) or 100 (Police) right now. " +
+    "You can also tap \"Alert emergency contact\" on your active trip screen to notify your saved contact instantly. " +
+    "Stay on the line with them if you can, and share your live location.";
+
+  function looksLikeEmergency(text){
+    var t = text.toLowerCase();
+    return EMERGENCY_KEYWORDS.some(function(k){ return t.indexOf(k) !== -1; });
+  }
+
+  function addMessage(text, cls){
+    var div = document.createElement("div");
+    div.className = "chat-msg " + cls;
+    div.textContent = text;
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return div;
+  }
+
+  function openChat(){
+    panel.classList.add("open");
+    if(!messagesEl.children.length){
+      addMessage(
+        "Hi! I'm your go_travels AI Copilot. Ask me anything about fares, vehicles, cancellations, or safety features. " +
+        "In an urgent emergency, call 112 or 100 immediately.",
+        "bot"
+      );
+    }
+    inputEl.focus();
+  }
+  function closeChat(){ panel.classList.remove("open"); }
+
+  fab.addEventListener("click", function(){
+    if(panel.classList.contains("open")) closeChat(); else openChat();
+  });
+  closeBtn.addEventListener("click", closeChat);
+
+  async function sendMessage(){
+    var text = inputEl.value.trim();
+    if(!text) return;
+    inputEl.value = "";
+    addMessage(text, "user");
+    chatHistory.push({ role:"user", content:text });
+
+    if(looksLikeEmergency(text)){
+      addMessage(EMERGENCY_REPLY, "emergency");
+    }
+
+    var typingEl = addMessage("Thinking…", "bot typing");
+
+    try{
+      var res = await fetch("/api/support-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text, history: chatHistory.slice(-8) })
+      });
+      var data = await res.json();
+      typingEl.remove();
+      if(data && data.reply){
+        if(!(data.emergency && looksLikeEmergency(text))){
+          addMessage(data.reply, data.emergency ? "emergency" : "bot");
+        }
+        chatHistory.push({ role:"assistant", content:data.reply });
+      }
+    }catch(err){
+      typingEl.remove();
+      addMessage("I couldn't reach support right now — please try again in a moment.", "bot");
+    }
+  }
+
+  sendBtn.addEventListener("click", sendMessage);
+  inputEl.addEventListener("keydown", function(e){
+    if(e.key === "Enter") sendMessage();
+  });
+})();
+</script>
+</body>
+</html>
